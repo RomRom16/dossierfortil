@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Save, List, User, Briefcase, GraduationCap, Wrench, FileText } from 'lucide-react';
+import { Plus, Trash2, Save, User, Briefcase, GraduationCap, Wrench, FileText, Calendar } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type ExperienceForm = {
@@ -15,7 +15,7 @@ type ExperienceForm = {
 };
 
 type EducationForm = {
-  degree: string;
+  degree_or_certification: string;
   year: string;
   institution: string;
 };
@@ -43,7 +43,7 @@ const initialExperience: ExperienceForm = {
 };
 
 const initialEducation: EducationForm = {
-  degree: '',
+  degree_or_certification: '',
   year: '',
   institution: '',
 };
@@ -143,6 +143,7 @@ export default function ProfileForm({ onViewProfiles }: Props) {
         .insert({
           full_name: formData.full_name,
           roles: formData.roles.filter(r => r.trim()),
+          job_title: formData.roles.filter(r => r.trim()).join(' / ') || '',
           candidate_description: formData.candidate_description,
         })
         .select()
@@ -191,6 +192,9 @@ export default function ProfileForm({ onViewProfiles }: Props) {
           project: exp.project.trim(),
           responsibilities: exp.responsibilities.trim(),
           technical_environment: exp.technical_environment.trim(),
+          context: '',
+          expertises: [],
+          tools_used: [],
         }));
 
       if (experiencesData.length > 0) {
@@ -201,10 +205,10 @@ export default function ProfileForm({ onViewProfiles }: Props) {
       }
 
       const educationsData = formData.educations
-        .filter(edu => edu.degree.trim())
+        .filter(edu => edu.degree_or_certification.trim())
         .map(edu => ({
           profile_id: profileId,
-          degree: edu.degree.trim(),
+          degree_or_certification: edu.degree_or_certification.trim(),
           institution: edu.institution.trim(),
           year: edu.year ? parseInt(edu.year) : null,
         }));
@@ -226,6 +230,10 @@ export default function ProfileForm({ onViewProfiles }: Props) {
         experiences: [{ ...initialExperience }],
         educations: [{ ...initialEducation }],
       });
+
+      setTimeout(() => {
+        onViewProfiles();
+      }, 1500);
     } catch (error) {
       console.error('Error submitting form:', error);
       setMessage({ type: 'error', text: 'Erreur lors de la création du profil' });
@@ -235,439 +243,441 @@ export default function ProfileForm({ onViewProfiles }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 py-8 px-4">
+    <div className="py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        <div className="bg-white rounded-lg shadow-xl p-8 border border-blue-100">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold text-[#262626]">Formulaire de Profil Professionnel</h1>
-            <button
-              type="button"
-              onClick={onViewProfiles}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <List size={20} />
-              Voir les profils
-            </button>
-          </div>
-
-          {message && (
-            <div
-              className={`mb-6 p-4 rounded-lg border ${
-                message.type === 'success'
-                  ? 'bg-green-50 text-green-800 border-green-200'
-                  : 'bg-red-50 text-red-800 border-red-200'
-              }`}
-            >
-              {message.text}
+        <div className="bg-white rounded-xl shadow-xl overflow-hidden border-t-4 border-orange-500">
+          <div className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="h-1 flex-1 bg-gradient-to-r from-orange-500 via-green-500 to-cyan-500"></div>
+              <h1 className="text-3xl font-bold text-gray-900">Nouveau Profil Professionnel</h1>
+              <div className="h-1 flex-1 bg-gradient-to-l from-orange-500 via-green-500 to-cyan-500"></div>
             </div>
-          )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-6">
-                <User className="w-6 h-6 text-[#FF6D00]" />
-                <h2 className="text-2xl font-semibold text-[#262626] border-b-2 border-[#FF6D00] pb-2">
-                  Informations personnelles
-                </h2>
+            {message && (
+              <div
+                className={`mb-6 p-4 rounded-lg border $\{
+                  message.type === 'success'
+                    ? 'bg-green-50 text-green-800 border-green-200'
+                    : 'bg-red-50 text-red-800 border-red-200'
+                }`}
+              >
+                {message.text}
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-[#262626] mb-2">
-                  Nom complet *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.full_name}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, full_name: e.target.value }))
-                  }
-                  className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                  placeholder="Ex: Roméo Probst"
-                />
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Informations personnelles */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <User className="w-6 h-6 text-orange-500" />
+                  <h2 className="text-2xl font-semibold text-gray-900 border-b-2 border-orange-500 pb-2 inline-block">
+                    Informations personnelles
+                  </h2>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-[#262626] mb-2">
-                  Rôles
-                </label>
-                {formData.roles.map((role, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nom complet *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.full_name}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, full_name: e.target.value }))
+                    }
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                    placeholder="Ex: Roméo Probst"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rôles
+                  </label>
+                  {formData.roles.map((role, index) => (
+                    <div key={index} className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={role}
+                        onChange={e => handleItemChange('roles', index, e.target.value)}
+                        className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        placeholder="Ex: AMOA / Chef de projet / Business Analyst"
+                      />
+                      {formData.roles.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveItem('roles', index)}
+                          className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => handleAddItem('roles')}
+                    className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-orange-200"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Ajouter un rôle
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description du profil
+                  </label>
+                  <textarea
+                    value={formData.candidate_description}
+                    onChange={e =>
+                      setFormData(prev => ({ ...prev, candidate_description: e.target.value }))
+                    }
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                    placeholder="Décrivez votre profil professionnel et vos aspirations..."
+                  />
+                </div>
+              </section>
+
+              {/* Expertises */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <FileText className="w-6 h-6 text-orange-500" />
+                  <h2 className="text-2xl font-semibold text-gray-900 border-b-2 border-orange-500 pb-2 inline-block">
+                    Expertises
+                  </h2>
+                </div>
+                {formData.general_expertises.map((expertise, index) => (
+                  <div key={index} className="flex gap-2">
                     <input
                       type="text"
-                      value={role}
-                      onChange={e => handleItemChange('roles', index, e.target.value)}
-                      className="flex-1 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                      placeholder="Ex: AMOA / Chef de projet / Business Analyst / Développeur"
+                      value={expertise}
+                      onChange={e => handleItemChange('general_expertises', index, e.target.value)}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                      placeholder="Ex: Analyse et formalisation des besoins métiers"
                     />
-                    {formData.roles.length > 1 && (
+                    {formData.general_expertises.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => handleRemoveItem('roles', index)}
-                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg border border-red-200 transition-colors"
+                        onClick={() => handleRemoveItem('general_expertises', index)}
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 size={20} />
                       </button>
                     )}
                   </div>
                 ))}
                 <button
                   type="button"
-                  onClick={() => handleAddItem('roles')}
-                  className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+                  onClick={() => handleAddItem('general_expertises')}
+                  className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-orange-200"
                 >
-                  <Plus className="w-4 h-4" />
-                  Ajouter un rôle
+                  <Plus size={20} />
+                  Ajouter une expertise
                 </button>
-              </div>
+              </section>
 
-              <div>
-                <label className="block text-sm font-medium text-[#262626] mb-2">
-                  Description du profil
-                </label>
-                <textarea
-                  value={formData.candidate_description}
-                  onChange={e =>
-                    setFormData(prev => ({ ...prev, candidate_description: e.target.value }))
-                  }
-                  rows={4}
-                  className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                  placeholder="Décrivez votre profil professionnel et vos aspirations..."
-                />
-              </div>
-            </section>
-
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-6">
-                <FileText className="w-6 h-6 text-[#FF6D00]" />
-                <h2 className="text-2xl font-semibold text-[#262626] border-b-2 border-[#FF6D00] pb-2">
-                  Expertises
-                </h2>
-              </div>
-              {formData.general_expertises.map((expertise, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={expertise}
-                    onChange={e => handleItemChange('general_expertises', index, e.target.value)}
-                      className="flex-1 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                    placeholder="Ex: Analyse et formalisation des besoins métiers"
-                  />
-                  {formData.general_expertises.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveItem('general_expertises', index)}
-                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
+              {/* Outils */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <Wrench className="w-6 h-6 text-orange-500" />
+                  <h2 className="text-2xl font-semibold text-gray-900 border-b-2 border-orange-500 pb-2 inline-block">
+                    Outils et technologies
+                  </h2>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleAddItem('general_expertises')}
-                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <Plus size={20} />
-                Ajouter une expertise
-              </button>
-            </section>
-
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-6">
-                <Wrench className="w-6 h-6 text-[#FF6D00]" />
-                <h2 className="text-2xl font-semibold text-[#262626] border-b-2 border-[#FF6D00] pb-2">
-                  Outils et technologies
-                </h2>
-              </div>
-              {formData.tools.map((tool, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={tool}
-                    onChange={e => handleItemChange('tools', index, e.target.value)}
-                    className="flex-1 px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                    placeholder="Ex: JavaScript, React, Node.js"
-                  />
-                  {formData.tools.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveItem('tools', index)}
-                      className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleAddItem('tools')}
-                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <Plus size={20} />
-                Ajouter un outil
-              </button>
-            </section>
-
-            <section className="space-y-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Briefcase className="w-6 h-6 text-[#FF6D00]" />
-                <h2 className="text-2xl font-semibold text-[#262626] border-b-2 border-[#FF6D00] pb-2">
-                  Expériences professionnelles
-                </h2>
-              </div>
-              {formData.experiences.map((experience, expIndex) => (
-                <div key={expIndex} className="p-6 bg-blue-50/50 rounded-lg space-y-4 relative border border-blue-200">
-                  {formData.experiences.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveExperience(expIndex)}
-                      className="absolute top-4 right-4 px-3 py-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
-
-                  <h3 className="font-semibold text-lg text-blue-800">
-                    Expérience {expIndex + 1}
-                  </h3>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Entreprise *
-                      </label>
-                      <input
-                        type="text"
-                        value={experience.company}
-                        onChange={e =>
-                          handleExperienceChange(expIndex, 'company', e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="Ex: Eurométropole de Strasbourg"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Localisation
-                      </label>
-                      <input
-                        type="text"
-                        value={experience.location}
-                        onChange={e =>
-                          handleExperienceChange(expIndex, 'location', e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="Ex: Strasbourg"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Poste occupé
-                      </label>
-                      <input
-                        type="text"
-                        value={experience.job_title}
-                        onChange={e =>
-                          handleExperienceChange(expIndex, 'job_title', e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="Ex: Chef de projet SI / Développeur"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Secteur
-                      </label>
-                      <input
-                        type="text"
-                        value={experience.sector}
-                        onChange={e =>
-                          handleExperienceChange(expIndex, 'sector', e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="Ex: Administration publique – Collectivité territoriale"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Date de début *
-                      </label>
-                      <input
-                        type="date"
-                        value={experience.start_date}
-                        onChange={e =>
-                          handleExperienceChange(expIndex, 'start_date', e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Date de fin
-                      </label>
-                      <input
-                        type="date"
-                        value={experience.end_date}
-                        onChange={e =>
-                          handleExperienceChange(expIndex, 'end_date', e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#262626] mb-2">
-                      Projet
-                    </label>
+                {formData.tools.map((tool, index) => (
+                  <div key={index} className="flex gap-2">
                     <input
                       type="text"
-                      value={experience.project}
-                      onChange={e =>
-                        handleExperienceChange(expIndex, 'project', e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                      placeholder="Nom du projet"
+                      value={tool}
+                      onChange={e => handleItemChange('tools', index, e.target.value)}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                      placeholder="Ex: JavaScript, React, Node.js"
                     />
+                    {formData.tools.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem('tools', index)}
+                        className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
                   </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => handleAddItem('tools')}
+                  className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-orange-200"
+                >
+                  <Plus size={20} />
+                  Ajouter un outil
+                </button>
+              </section>
 
-                  <div>
-                    <label className="block text-sm font-medium text-[#262626] mb-2">
-                      Responsabilités
-                    </label>
-                    <textarea
-                      value={experience.responsibilities}
-                      onChange={e =>
-                        handleExperienceChange(expIndex, 'responsibilities', e.target.value)
-                      }
-                      rows={4}
-                      className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                      placeholder="Décrivez vos responsabilités dans ce poste..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-[#262626] mb-2">
-                      Environnement technique
-                    </label>
-                    <textarea
-                      value={experience.technical_environment}
-                      onChange={e =>
-                        handleExperienceChange(expIndex, 'technical_environment', e.target.value)
-                      }
-                      rows={3}
-                      className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                      placeholder="Ex: Java, Spring Boot, PostgreSQL, Docker, Kubernetes..."
-                    />
-                  </div>
+              {/* Expériences */}
+              <section className="space-y-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <Briefcase className="w-6 h-6 text-orange-500" />
+                  <h2 className="text-2xl font-semibold text-gray-900 border-b-2 border-orange-500 pb-2 inline-block">
+                    Expériences professionnelles
+                  </h2>
                 </div>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddExperience}
-                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <Plus size={20} />
-                Ajouter une expérience
-              </button>
-            </section>
+                {formData.experiences.map((experience, expIndex) => (
+                  <div key={expIndex} className="p-6 bg-gradient-to-br from-orange-50 to-green-50 rounded-lg space-y-4 relative border-l-4 border-orange-500">
+                    {formData.experiences.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveExperience(expIndex)}
+                        className="absolute top-4 right-4 px-3 py-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
 
-            <section className="space-y-4">
-              <div className="flex items-center gap-2 mb-6">
-                <GraduationCap className="w-6 h-6 text-[#FF6D00]" />
-                <h2 className="text-2xl font-semibold text-[#262626] border-b-2 border-[#FF6D00] pb-2">
-                  Diplômes et certifications
-                </h2>
-              </div>
-              {formData.educations.map((education, index) => (
-                <div key={index} className="p-4 bg-blue-50/30 rounded-lg space-y-4 relative border border-blue-200">
-                  {formData.educations.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveEducation(index)}
-                      className="absolute top-4 right-4 px-3 py-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                  )}
+                    <h3 className="font-semibold text-lg text-orange-800 flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      Expérience {expIndex + 1}
+                    </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Diplôme
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Entreprise *
+                        </label>
+                        <input
+                          type="text"
+                          value={experience.company}
+                          onChange={e =>
+                            handleExperienceChange(expIndex, 'company', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Ex: Eurométropole de Strasbourg"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Localisation
+                        </label>
+                        <input
+                          type="text"
+                          value={experience.location}
+                          onChange={e =>
+                            handleExperienceChange(expIndex, 'location', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Ex: Strasbourg"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Poste occupé
+                        </label>
+                        <input
+                          type="text"
+                          value={experience.job_title}
+                          onChange={e =>
+                            handleExperienceChange(expIndex, 'job_title', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Ex: Chef de projet SI / Développeur"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Secteur
+                        </label>
+                        <input
+                          type="text"
+                          value={experience.sector}
+                          onChange={e =>
+                            handleExperienceChange(expIndex, 'sector', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Ex: Administration publique"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Date de début *
+                        </label>
+                        <input
+                          type="date"
+                          value={experience.start_date}
+                          onChange={e =>
+                            handleExperienceChange(expIndex, 'start_date', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Date de fin
+                        </label>
+                        <input
+                          type="date"
+                          value={experience.end_date}
+                          onChange={e =>
+                            handleExperienceChange(expIndex, 'end_date', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Projet
                       </label>
                       <input
                         type="text"
-                        value={education.degree}
+                        value={experience.project}
                         onChange={e =>
-                          handleEducationChange(index, 'degree', e.target.value)
+                          handleExperienceChange(expIndex, 'project', e.target.value)
                         }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="Ex: Master en Informatique"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        placeholder="Nom du projet"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Année
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Responsabilités
                       </label>
-                      <input
-                        type="number"
-                        value={education.year}
-                        onChange={e => handleEducationChange(index, 'year', e.target.value)}
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="2020"
-                        min="1950"
-                        max="2100"
+                      <textarea
+                        value={experience.responsibilities}
+                        onChange={e =>
+                          handleExperienceChange(expIndex, 'responsibilities', e.target.value)
+                        }
+                        rows={4}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        placeholder="Décrivez vos responsabilités dans ce poste..."
                       />
                     </div>
 
-                    <div className="md:col-span-3">
-                      <label className="block text-sm font-medium text-[#262626] mb-2">
-                        Institution
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Environnement technique
                       </label>
-                      <input
-                        type="text"
-                        value={education.institution}
+                      <textarea
+                        value={experience.technical_environment}
                         onChange={e =>
-                          handleEducationChange(index, 'institution', e.target.value)
+                          handleExperienceChange(expIndex, 'technical_environment', e.target.value)
                         }
-                        className="w-full px-4 py-2 border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-blue-50/30"
-                        placeholder="Nom de l'établissement"
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                        placeholder="Ex: Java, Spring Boot, PostgreSQL, Docker, Kubernetes..."
                       />
                     </div>
                   </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddEducation}
-                className="flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <Plus size={20} />
-                Ajouter un diplôme/certification
-              </button>
-            </section>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleAddExperience}
+                  className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-orange-200"
+                >
+                  <Plus size={20} />
+                  Ajouter une expérience
+                </button>
+              </section>
 
-            <div className="flex justify-end pt-6 border-t">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors font-medium"
-              >
-                <Save size={20} />
-                {isSubmitting ? 'Enregistrement...' : 'Enregistrer le profil'}
-              </button>
-            </div>
-          </form>
+              {/* Diplômes */}
+              <section className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <GraduationCap className="w-6 h-6 text-orange-500" />
+                  <h2 className="text-2xl font-semibold text-gray-900 border-b-2 border-orange-500 pb-2 inline-block">
+                    Diplômes et certifications
+                  </h2>
+                </div>
+                {formData.educations.map((education, index) => (
+                  <div key={index} className="p-4 bg-gradient-to-r from-green-50 to-cyan-50 rounded-lg space-y-4 relative border-l-4 border-green-500">
+                    {formData.educations.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveEducation(index)}
+                        className="absolute top-4 right-4 px-3 py-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Diplôme
+                        </label>
+                        <input
+                          type="text"
+                          value={education.degree_or_certification}
+                          onChange={e =>
+                            handleEducationChange(index, 'degree_or_certification', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Ex: Master en Informatique"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Année
+                        </label>
+                        <input
+                          type="number"
+                          value={education.year}
+                          onChange={e => handleEducationChange(index, 'year', e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="2020"
+                          min="1950"
+                          max="2100"
+                        />
+                      </div>
+
+                      <div className="md:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Institution
+                        </label>
+                        <input
+                          type="text"
+                          value={education.institution}
+                          onChange={e =>
+                            handleEducationChange(index, 'institution', e.target.value)
+                          }
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                          placeholder="Nom de l'établissement"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleAddEducation}
+                  className="flex items-center gap-2 px-4 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors border border-orange-200"
+                >
+                  <Plus size={20} />
+                  Ajouter un diplôme/certification
+                </button>
+              </section>
+
+              <div className="flex justify-end pt-6 border-t border-gray-200">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-semibold shadow-lg hover:shadow-xl"
+                >
+                  <Save size={20} />
+                  {isSubmitting ? 'Enregistrement...' : 'Enregistrer le profil'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

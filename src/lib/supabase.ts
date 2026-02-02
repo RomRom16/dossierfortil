@@ -13,6 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Profile = {
   id: string;
+  full_name: string;
+  roles: string[];
   job_title: string;
   candidate_description: string;
   created_at: string;
@@ -37,13 +39,17 @@ export type Experience = {
   id: string;
   profile_id: string;
   company: string;
+  location: string;
   start_date: string;
   end_date: string | null;
+  job_title: string;
+  sector: string;
   context: string;
   project: string;
   expertises: string[];
   tools_used: string[];
-  responsibilities: string[];
+  responsibilities: string;
+  technical_environment: string;
   created_at: string;
 };
 

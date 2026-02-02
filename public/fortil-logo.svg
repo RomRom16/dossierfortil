@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" fill="none">
+  <text x="10" y="35" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#2c3e50">fortil</text>
+  <text x="10" y="52" font-family="Arial, sans-serif" font-size="8" fill="#FF6D00">Committed to Sustainable Performance</text>
+  <circle cx="30" cy="25" r="8" fill="#FF6D00" opacity="0.3"/>
+  <circle cx="38" cy="25" r="6" fill="#4CAF50" opacity="0.3"/>
+  <circle cx="44" cy="25" r="4" fill="#00BCD4" opacity="0.3"/>
+</svg>

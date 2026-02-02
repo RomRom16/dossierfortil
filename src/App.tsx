@@ -1,19 +1,27 @@
-import { useState } from 'react';
-import ProfileForm from './components/ProfileForm';
-import ProfilesList from './components/ProfilesList';
+import { useAuth } from './contexts/AuthContext';
+import { Login } from './components/Login';
+import { Dashboard } from './components/Dashboard';
+import { Loader } from 'lucide-react';
 
 function App() {
-  const [view, setView] = useState<'form' | 'list'>('form');
+  const { user, loading } = useAuth();
 
-  return (
-    <>
-      {view === 'form' ? (
-        <ProfileForm onViewProfiles={() => setView('list')} />
-      ) : (
-        <ProfilesList onBack={() => setView('form')} />
-      )}
-    </>
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin mx-auto text-orange-600 mb-4" />
+          <p className="text-gray-600 text-lg">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
+  return <Dashboard />;
 }
 
 export default App;
