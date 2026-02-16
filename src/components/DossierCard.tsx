@@ -4,13 +4,17 @@ import type { ProfileWithDetails } from '../lib/api';
 type Props = {
     profile: ProfileWithDetails;
     onDeleteClick?: (profile: ProfileWithDetails) => void;
+    onClick?: () => void;
 };
 
-export function DossierCard({ profile, onDeleteClick }: Props) {
+export function DossierCard({ profile, onDeleteClick, onClick }: Props) {
     const roles = profile.roles || [];
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition-shadow relative group">
+        <div
+            onClick={onClick}
+            className={`bg-white rounded-xl shadow-sm border border-slate-100 p-6 transition-all relative group ${onClick ? 'hover:shadow-md cursor-pointer hover:border-orange-200' : ''}`}
+        >
             <div className="flex justify-between items-start">
                 <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 flex-shrink-0">

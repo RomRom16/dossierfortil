@@ -210,6 +210,14 @@ export async function apiListProfiles(user: AppUser): Promise<ProfileWithDetails
   return res.json() as Promise<ProfileWithDetails[]>;
 }
 
+export async function apiGetProfileDetails(user: AppUser, id: string): Promise<ProfileWithDetails> {
+  const res = await fetch(`${API_URL}/profiles/${id}`, {
+    headers: authHeaders(user),
+  });
+  if (!res.ok) throw new Error('Dossier introuvable');
+  return res.json();
+}
+
 export async function apiGetMe(user: AppUser): Promise<{ roles: string[] }> {
   const res = await fetch(`${API_URL}/me`, {
     headers: authHeaders(user),

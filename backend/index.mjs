@@ -641,6 +641,33 @@ app.post('/api/parse-cv', async (req, res) => {
   }
 });
 
+// GET profile details
+app.get('/api/profiles/:id', authMiddleware, (req, res) => {
+  const profile = db.prepare('SELECT * FROM profiles WHERE id = ?').get(req.params.id);
+  if (!profile) return res.status(404).json({ error: 'Dossier introuvable' });
+
+  // Security check
+  const roles = db.prepare('select role from user_roles where user_id = ?').all(req.user.id).map(r => r.role);
+  if (!roles.includes('admin') && profile.manager_id !== req.user.id) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+
+  const profileId = profile.id;
+  const general_expertises = db.prepare('select * from general_expertises where profile_id = ? order by datetime(created_at)').all(profileId);
+  const tools = db.prepare('select * from tools where profile_id = ? order by datetime(created_at)').all(profileId);
+  const experiences = db.prepare('select * from experiences where profile_id = ? order by datetime(start_date) desc').all(profileId);
+  const educations = db.prepare('select * from educations where profile_id = ? order by year desc, datetime(created_at) desc').all(profileId);
+
+  res.json({
+    ...profile,
+    roles: JSON.parse(profile.roles || '[]'),
+    general_expertises,
+    tools,
+    experiences,
+    educations,
+  });
+});
+
 // --- ENDPOINT: liste des profils (Legacy or Search specific) ---
 // Note: Frontend should now prioritize /api/candidates, but this might remain useful for admin view
 app.get('/api/profiles', authMiddleware, (req, res) => {

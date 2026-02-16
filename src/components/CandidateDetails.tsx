@@ -8,10 +8,11 @@ import { ConfirmDialog } from './ConfirmDialog';
 type Props = {
     candidateId: string;
     onBack?: () => void;
+    onSelectDossier: (profileId: string) => void;
     onCreateDossier: (name: string) => void;
 };
 
-export function CandidateDetails({ candidateId, onBack, onCreateDossier }: Props) {
+export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreateDossier }: Props) {
     const { user, isAdmin, isBusinessManager } = useAuth();
     const [data, setData] = useState<CandidateWithProfiles | null>(null);
     const canManage = isAdmin || isBusinessManager || (data?.email === user?.email);
@@ -281,6 +282,7 @@ export function CandidateDetails({ candidateId, onBack, onCreateDossier }: Props
                             key={p.id}
                             profile={p}
                             onDeleteClick={canManage ? setDossierToDelete : undefined}
+                            onClick={() => onSelectDossier(p.id)}
                         />
                     ))}
                 </div>

@@ -520,6 +520,43 @@ app.delete('/api/candidates/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// Get single profile
+app.get('/api/profiles/:id', authMiddleware, async (req, res) => {
+    try {
+        const profile = await sql`SELECT * FROM profiles WHERE id = ${req.params.id}`;
+        if (profile.length === 0) return res.status(404).json({ error: 'Dossier introuvable' });
+
+        const p = profile[0];
+
+        // Security check
+        const roles = await sql`SELECT role FROM user_roles WHERE user_id = ${req.user.id}`;
+        const hasAdminOrBM = roles.some(r => r.role === 'admin' || r.role === 'business_manager');
+        if (!hasAdminOrBM && p.manager_id !== req.user.id) {
+            return res.status(403).json({ error: 'Accès interdit' });
+        }
+
+        const profileId = p.id;
+        const [general_expertises, tools, experiences, educations] = await Promise.all([
+            sql`SELECT * FROM general_expertises WHERE profile_id = ${profileId} ORDER BY created_at ASC`,
+            sql`SELECT * FROM tools WHERE profile_id = ${profileId} ORDER BY created_at ASC`,
+            sql`SELECT * FROM experiences WHERE profile_id = ${profileId} ORDER BY start_date DESC`,
+            sql`SELECT * FROM educations WHERE profile_id = ${profileId} ORDER BY year DESC, created_at DESC`
+        ]);
+
+        res.json({
+            ...p,
+            roles: p.roles ? p.roles.split(',').map(r => r.trim()) : [],
+            general_expertises,
+            tools,
+            experiences,
+            educations
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Erreur serveur' });
+    }
+});
+
 // Create profile/dossier
 app.post('/api/profiles', authMiddleware, async (req, res) => {
     try {

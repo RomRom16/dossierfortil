@@ -4,6 +4,7 @@ import { CandidatesList } from './CandidatesList';
 import { CandidateDetails } from './CandidateDetails';
 import ProfileForm from './ProfileForm';
 import { AdminPanel } from './AdminPanel';
+import { DossierView } from './DossierView';
 import { useAuth } from '../contexts/AuthContext';
 import { apiGetMyCandidate } from '../lib/api';
 
@@ -12,7 +13,8 @@ type ViewState =
   | { type: 'DETAILS'; candidateId: string }
   | { type: 'CREATE_DOSSIER'; candidateId: string; candidateName: string }
   | { type: 'ADMIN' }
-  | { type: 'MY_PROFILE'; selfCandidateId: string };
+  | { type: 'MY_PROFILE'; selfCandidateId: string }
+  | { type: 'DOSSIER_VIEW'; profileId: string; candidateId: string };
 
 export function Dashboard() {
   const { user, isAdmin, isBusinessManager } = useAuth();
@@ -65,11 +67,27 @@ export function Dashboard() {
           <CandidateDetails
             candidateId={view.type === 'DETAILS' ? view.candidateId : (view as any).selfCandidateId}
             onBack={isConsultantOnly ? undefined : () => setView({ type: 'LIST' })}
+            onSelectDossier={(profileId) => setView({
+              type: 'DOSSIER_VIEW',
+              profileId,
+              candidateId: view.type === 'DETAILS' ? view.candidateId : (view as any).selfCandidateId
+            })}
             onCreateDossier={(name) => setView({
               type: 'CREATE_DOSSIER',
               candidateId: view.type === 'DETAILS' ? view.candidateId : (view as any).selfCandidateId,
               candidateName: name
             })}
+          />
+        )}
+
+        {view.type === 'DOSSIER_VIEW' && (
+          <DossierView
+            profileId={view.profileId}
+            onBack={() => setView({
+              type: isConsultantOnly ? 'MY_PROFILE' : 'DETAILS',
+              candidateId: view.candidateId,
+              selfCandidateId: view.candidateId
+            } as any)}
           />
         )}
 
