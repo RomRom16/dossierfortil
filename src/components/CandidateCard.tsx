@@ -1,4 +1,4 @@
-import { User, FileText, Phone, Mail, ChevronRight } from 'lucide-react';
+import { FileText, Phone, Mail, ChevronRight } from 'lucide-react';
 import type { Candidate } from '../lib/api';
 
 type Props = {

@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiCreateProfile, apiParseCv } from '../lib/api';
-import { Loader, Upload, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
 
-// Worker PDF config
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Worker PDF config - using a safer initialization
+if (typeof window !== 'undefined' && pdfjs.version) {
+  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+}
 
-// We need to define types locally or import (assuming apiParseCv returns consistent type)
-// For simplicity in this fix, I'll redefine or use 'any' for the imported CV data structure if not strictly exported
-type CVData = any;
 
 type Props = {
   candidateId: string;

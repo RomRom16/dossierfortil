@@ -3,11 +3,9 @@ import { Briefcase, Calendar, Award, Wrench, MapPin, Building } from 'lucide-rea
 import { useAuth } from '../contexts/AuthContext';
 import { apiListProfiles, type ProfileWithDetails } from '../lib/api';
 
-type Props = {
-  onBack: () => void;
-};
+type Props = {};
 
-export default function ProfilesList({ onBack }: Props) {
+export default function ProfilesList({ }: Props) {
   const { user, isBusinessManager, isAdmin } = useAuth();
   const [profiles, setProfiles] = useState<ProfileWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,11 +89,11 @@ export default function ProfilesList({ onBack }: Props) {
                 {/* Header */}
                 <div className="relative p-8 bg-gradient-to-br from-slate-50 to-white">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-500 via-green-500 to-cyan-500"></div>
-                  
+
                   <h2 className="text-3xl font-bold text-gray-900 mb-3">
                     {profile.full_name || 'Profil'}
                   </h2>
-                  
+
                   {profile.roles && profile.roles.length > 0 && (
                     <div className="mb-4">
                       <p className="text-xl text-orange-600 font-semibold">
@@ -103,13 +101,13 @@ export default function ProfilesList({ onBack }: Props) {
                       </p>
                     </div>
                   )}
-                  
+
                   {profile.candidate_description && (
                     <p className="text-gray-700 leading-relaxed max-w-4xl">
                       {profile.candidate_description}
                     </p>
                   )}
-                  
+
                   <p className="text-sm text-gray-400 mt-4">
                     Créé le {new Date(profile.created_at).toLocaleDateString('fr-FR')}
                   </p>

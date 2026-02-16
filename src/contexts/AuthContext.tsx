@@ -9,8 +9,8 @@ interface AuthContextType {
   isBusinessManager: boolean;
   isAdmin: boolean;
   signInWithMicrosoft: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string, _password: string) => Promise<void>;
+  signUpWithEmail: (email: string, _password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     throw new Error('Connexion Microsoft non configurée avec le backend actuel.');
   };
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmail = async (email: string, _password: string) => {
     if (!email) {
       throw new Error('Email requis');
     }
@@ -94,9 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loadUserRoles(newUser);
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  const signUpWithEmail = async (email: string, _password: string) => {
     // Pour l'instant, inscription = connexion directe
-    await signInWithEmail(email, password);
+    await signInWithEmail(email, _password);
   };
 
   const signOut = async () => {

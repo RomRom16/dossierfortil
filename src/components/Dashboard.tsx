@@ -12,7 +12,7 @@ type ViewState =
 
 export function Dashboard() {
   const [view, setView] = useState<ViewState>({ type: 'LIST' });
-  const { isBusinessManager, isAdmin } = useAuth();
+  useAuth();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
