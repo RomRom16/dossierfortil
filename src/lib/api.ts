@@ -1,10 +1,54 @@
-import type {
-  Profile,
-  Experience,
-  Education,
-  GeneralExpertise,
-  Tool,
-} from './supabase';
+export type Profile = {
+  id: string;
+  full_name: string;
+  manager_id: string | null;
+  roles: string[];
+  job_title: string;
+  candidate_description: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GeneralExpertise = {
+  id: string;
+  profile_id: string;
+  expertise: string;
+  created_at: string;
+};
+
+export type Tool = {
+  id: string;
+  profile_id: string;
+  tool_name: string;
+  created_at: string;
+};
+
+export type Experience = {
+  id: string;
+  profile_id: string;
+  company: string;
+  location: string;
+  start_date: string;
+  end_date: string | null;
+  job_title: string;
+  sector: string;
+  context: string;
+  project: string;
+  expertises: string[];
+  tools_used: string[];
+  responsibilities: string;
+  technical_environment: string;
+  created_at: string;
+};
+
+export type Education = {
+  id: string;
+  profile_id: string;
+  degree_or_certification: string;
+  institution: string;
+  year: number | null;
+  created_at: string;
+};
 
 export type AppUser = {
   id: string;
@@ -56,7 +100,47 @@ export type ProfileWithDetails = Profile & {
   educations: Education[];
 };
 
-export async function apiCreateProfile(user: AppUser, payload: ProfilePayload) {
+export type Candidate = {
+  id: string;
+  manager_id: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
+  created_at: string;
+  dossier_count?: number; // Enrichi par l'API
+};
+
+export type CandidateWithProfiles = Candidate & {
+  profiles: ProfileWithDetails[];
+};
+
+export async function apiListCandidates(user: AppUser): Promise<Candidate[]> {
+  const res = await fetch(`${API_URL}/candidates`, {
+    headers: authHeaders(user),
+  });
+  if (!res.ok) throw new Error('Erreur lors du chargement des candidats');
+  return res.json();
+}
+
+export async function apiCreateCandidate(user: AppUser, payload: { full_name: string; email?: string; phone?: string }) {
+  const res = await fetch(`${API_URL}/candidates`, {
+    method: 'POST',
+    headers: authHeaders(user),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur lors de la création du candidat');
+  return res.json() as Promise<{ id: string }>;
+}
+
+export async function apiGetCandidateDetails(user: AppUser, id: string): Promise<CandidateWithProfiles> {
+  const res = await fetch(`${API_URL}/candidates/${id}`, {
+    headers: authHeaders(user),
+  });
+  if (!res.ok) throw new Error('Erreur lors du chargement du candidat');
+  return res.json();
+}
+
+export async function apiCreateProfile(user: AppUser, payload: ProfilePayload & { candidate_id: string }) {
   const res = await fetch(`${API_URL}/profiles`, {
     method: 'POST',
     headers: authHeaders(user),

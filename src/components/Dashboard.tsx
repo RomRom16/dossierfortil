@@ -1,69 +1,48 @@
 import { useState } from 'react';
 import { UserHeader } from './UserHeader';
+import { CandidatesList } from './CandidatesList';
+import { CandidateDetails } from './CandidateDetails';
 import ProfileForm from './ProfileForm';
-import ProfilesList from './ProfilesList';
-import { FileText, List } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+type ViewState =
+  | { type: 'LIST' }
+  | { type: 'DETAILS'; candidateId: string }
+  | { type: 'CREATE_DOSSIER'; candidateId: string; candidateName: string };
+
 export function Dashboard() {
-  const [view, setView] = useState<'form' | 'list'>('list');
+  const [view, setView] = useState<ViewState>({ type: 'LIST' });
   const { isBusinessManager, isAdmin } = useAuth();
-  const canManageCandidates = isBusinessManager || isAdmin;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 pb-20">
       <UserHeader />
 
-      {/* Role info */}
-      <div className="max-w-7xl mx-auto px-4 pt-4">
-        <div className="flex items-center justify-between text-xs md:text-sm text-gray-600">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200">
-            <span className="w-2 h-2 rounded-full bg-orange-500" />
-            {isAdmin
-              ? 'Rôle : Administrateur'
-              : isBusinessManager
-                ? 'Rôle : Business Manager'
-                : 'Rôle : Consultant'}
-          </span>
-        </div>
-      </div>
+      {/* Dynamic Content */}
+      <div className="pt-6">
+        {view.type === 'LIST' && (
+          <CandidatesList
+            onSelectCandidate={(id) => setView({ type: 'DETAILS', candidateId: id })}
+          />
+        )}
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setView('list')}
-              className={`flex items-center gap-2 px-6 py-4 font-medium border-b-2 transition-colors ${
-                view === 'list'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-              }`}
-            >
-              <List className="w-5 h-5" />
-              {canManageCandidates ? 'Mes candidats' : 'Mes dossiers de compétences'}
-            </button>
-            <button
-              onClick={() => setView('form')}
-              className={`flex items-center gap-2 px-6 py-4 font-medium border-b-2 transition-colors ${
-                view === 'form'
-                  ? 'border-orange-500 text-orange-600'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
-              }`}
-            >
-              <FileText className="w-5 h-5" />
-              {canManageCandidates ? 'Nouveau candidat' : 'Nouveau dossier'}
-            </button>
-          </div>
-        </div>
-      </div>
+        {view.type === 'DETAILS' && (
+          <CandidateDetails
+            candidateId={view.candidateId}
+            onBack={() => setView({ type: 'LIST' })}
+            onCreateDossier={(name) => setView({ type: 'CREATE_DOSSIER', candidateId: view.candidateId, candidateName: name })}
+          />
+        )}
 
-      {/* Content */}
-      {view === 'form' ? (
-        <ProfileForm onViewProfiles={() => setView('list')} />
-      ) : (
-        <ProfilesList onBack={() => setView('form')} />
-      )}
+        {view.type === 'CREATE_DOSSIER' && (
+          <ProfileForm
+            candidateId={view.candidateId}
+            candidateName={view.candidateName}
+            onCancel={() => setView({ type: 'DETAILS', candidateId: view.candidateId })}
+            onSuccess={() => setView({ type: 'DETAILS', candidateId: view.candidateId })}
+          />
+        )}
+      </div>
     </div>
   );
 }

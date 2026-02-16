@@ -25,16 +25,29 @@ db.exec(`
     foreign key (user_id) references users(id) on delete cascade
   );
 
-  create table if not exists profiles (
+  create table if not exists candidates (
     id text primary key,
     manager_id text not null,
     full_name text not null,
+    email text,
+    phone text,
+    created_at text not null,
+    updated_at text not null,
+    foreign key (manager_id) references users(id)
+  );
+
+  create table if not exists profiles (
+    id text primary key,
+    manager_id text not null,
+    candidate_id text,
+    full_name text not null,  -- Titre du dossier
     roles text,
     job_title text,
     candidate_description text,
     created_at text not null,
     updated_at text not null,
-    foreign key (manager_id) references users(id)
+    foreign key (manager_id) references users(id),
+    foreign key (candidate_id) references candidates(id) on delete cascade
   );
 
   create table if not exists general_expertises (
@@ -83,7 +96,48 @@ db.exec(`
   );
 `);
 
+// --- MIGRATION SCHEMA UPDATES ---
+try {
+  // Check if candidate_id column exists, if not add it
+  const tableInfo = db.prepare("PRAGMA table_info(profiles)").all();
+  const hasCandidateId = tableInfo.some(col => col.name === 'candidate_id');
+  if (!hasCandidateId) {
+    console.log('Adding candidate_id column to profiles table...');
+    db.prepare('ALTER TABLE profiles ADD COLUMN candidate_id text REFERENCES candidates(id) ON DELETE CASCADE').run();
+  }
+} catch (e) {
+  console.error('Schema migration error:', e);
+}
+
 const now = () => new Date().toISOString();
+
+// --- DATA MIGRATION: Link Orphans Profiles to New Candidates ---
+(() => {
+  try {
+    const orphans = db.prepare('SELECT * FROM profiles WHERE candidate_id IS NULL').all();
+    if (orphans.length > 0) {
+      console.log(`Migrating ${orphans.length} orphan profiles to candidates...`);
+      const insertCandidate = db.prepare(`
+        INSERT INTO candidates (id, manager_id, full_name, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+      const updateProfile = db.prepare('UPDATE profiles SET candidate_id = ? WHERE id = ?');
+
+      db.transaction(() => {
+        for (const p of orphans) {
+          const candidateId = randomUUID();
+          // Use profile full_name as candidate name, creation date as is
+          insertCandidate.run(candidateId, p.manager_id, p.full_name, p.created_at, p.updated_at);
+          updateProfile.run(candidateId, p.id);
+        }
+      })();
+      console.log('Migration complete.');
+    }
+  } catch (e) {
+    console.error('Data migration error:', e);
+  }
+})();
+
 
 // --- IA: parsing de CV avec un LLM externe (OpenAI ou compatible) ---
 async function parseCvWithAI(text) {
@@ -200,9 +254,96 @@ app.get('/api/me', authMiddleware, (req, res) => {
   });
 });
 
+// --- API CANDIDATS ---
+
+// LISTER les candidats
+app.get('/api/candidates', authMiddleware, (req, res) => {
+  const roles = db.prepare('select role from user_roles where user_id = ?').all(req.user.id).map(r => r.role);
+  const isAdmin = roles.includes('admin');
+  const isBusinessManager = roles.includes('business_manager');
+
+  let candidates;
+  if (isAdmin) {
+    candidates = db.prepare('SELECT * FROM candidates ORDER BY datetime(created_at) DESC').all();
+  } else if (isBusinessManager) {
+    candidates = db.prepare('SELECT * FROM candidates WHERE manager_id = ? ORDER BY datetime(created_at) DESC').all(req.user.id);
+  } else {
+    candidates = db.prepare('SELECT * FROM candidates WHERE manager_id = ? ORDER BY datetime(created_at) DESC').all(req.user.id);
+  }
+
+  // Enrichir avec nombre de dossiers
+  const result = candidates.map(c => {
+    const count = db.prepare('SELECT count(*) as count FROM profiles WHERE candidate_id = ?').get(c.id).count;
+    return { ...c, dossier_count: count };
+  });
+
+  res.json(result);
+});
+
+// CRÉER un candidat
+app.post('/api/candidates', authMiddleware, (req, res) => {
+  const { full_name, email, phone } = req.body || {};
+  if (!full_name) {
+    return res.status(400).json({ error: 'Nom complet requis' });
+  }
+
+  const id = randomUUID();
+  const createdAt = now();
+
+  db.prepare(`
+    INSERT INTO candidates (id, manager_id, full_name, email, phone, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(id, req.user.id, full_name, email || null, phone || null, createdAt, createdAt);
+
+  res.status(201).json({ id });
+});
+
+// GET candidat details + ses dossiers
+app.get('/api/candidates/:id', authMiddleware, (req, res) => {
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.params.id);
+  if (!candidate) return res.status(404).json({ error: 'Candidat introuvable' });
+
+  // Security check: simple ownership or admin
+  const roles = db.prepare('select role from user_roles where user_id = ?').all(req.user.id).map(r => r.role);
+  if (!roles.includes('admin') && candidate.manager_id !== req.user.id) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+
+  const profiles = db.prepare('SELECT * FROM profiles WHERE candidate_id = ? ORDER BY datetime(created_at) DESC').all(candidate.id);
+
+  // Hydrate profiles with details (expertises etc) similar to api/profiles list
+  const profilesWithDetails = profiles.map((p) => {
+    const profileId = p.id;
+    const general_expertises = db.prepare('select * from general_expertises where profile_id = ?').all(profileId);
+    const tools = db.prepare('select * from tools where profile_id = ?').all(profileId);
+    const experiences = db.prepare('select * from experiences where profile_id = ? order by datetime(start_date) desc').all(profileId);
+    const educations = db.prepare('select * from educations where profile_id = ? order by year desc').all(profileId);
+
+    return {
+      ...p,
+      roles: JSON.parse(p.roles || '[]'),
+      general_expertises,
+      tools,
+      experiences,
+      educations,
+    };
+  });
+
+  res.json({ ...candidate, profiles: profilesWithDetails });
+});
+
+// --- API PROFILS (DOSSIERS) ---
+
 // --- ENDPOINT: créer un profil ---
 app.post('/api/profiles', authMiddleware, (req, res) => {
   const body = req.body || {};
+  // Now requires candidate_id
+  let candidateId = body.candidate_id;
+
+  if (!candidateId) {
+    return res.status(400).json({ error: 'candidate_id est requis pour créer un dossier' });
+  }
+
   const profileId = randomUUID();
   const createdAt = now();
 
@@ -210,14 +351,18 @@ app.post('/api/profiles', authMiddleware, (req, res) => {
   const jobTitle = rolesArray.filter((r) => r && r.trim()).join(' / ');
 
   const stmt = db.prepare(`
-    insert into profiles (id, manager_id, full_name, roles, job_title, candidate_description, created_at, updated_at)
-    values (?, ?, ?, ?, ?, ?, ?, ?)
+    insert into profiles (id, manager_id, candidate_id, full_name, roles, job_title, candidate_description, created_at, updated_at)
+    values (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
+
+  // Note: 'full_name' in profiles table becomes "Dossier Title" mostly, but we can reuse the candidate name or a specific title.
+  // For now we keep using body.full_name as the dossier title/name.
 
   stmt.run(
     profileId,
     req.user.id,
-    body.full_name,
+    candidateId,
+    body.full_name || 'Dossier sans titre',
     JSON.stringify(rolesArray),
     jobTitle,
     body.candidate_description || '',
@@ -322,7 +467,8 @@ app.post('/api/parse-cv', async (req, res) => {
   }
 });
 
-// --- ENDPOINT: liste des profils ---
+// --- ENDPOINT: liste des profils (Legacy or Search specific) ---
+// Note: Frontend should now prioritize /api/candidates, but this might remain useful for admin view
 app.get('/api/profiles', authMiddleware, (req, res) => {
   const roles = db
     .prepare('select role from user_roles where user_id = ?')
@@ -394,4 +540,3 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
 });
-
