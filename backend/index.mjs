@@ -298,6 +298,47 @@ app.post('/api/candidates', authMiddleware, (req, res) => {
   res.status(201).json({ id });
 });
 
+// METTRE A JOUR un candidat
+app.put('/api/candidates/:id', authMiddleware, (req, res) => {
+  const { full_name, email, phone } = req.body || {};
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.params.id);
+
+  if (!candidate) return res.status(404).json({ error: 'Candidat introuvable' });
+
+  // Security check
+  const roles = db.prepare('select role from user_roles where user_id = ?').all(req.user.id).map(r => r.role);
+  if (!roles.includes('admin') && candidate.manager_id !== req.user.id) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+
+  const updatedAt = now();
+  db.prepare(`
+    UPDATE candidates 
+    SET full_name = COALESCE(?, full_name), 
+        email = ?, 
+        phone = ?, 
+        updated_at = ?
+    WHERE id = ?
+  `).run(full_name, email, phone, updatedAt, req.params.id);
+
+  res.json({ success: true });
+});
+
+// SUPPRIMER un candidat
+app.delete('/api/candidates/:id', authMiddleware, (req, res) => {
+  const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.params.id);
+  if (!candidate) return res.status(404).json({ error: 'Candidat introuvable' });
+
+  // Security check
+  const roles = db.prepare('select role from user_roles where user_id = ?').all(req.user.id).map(r => r.role);
+  if (!roles.includes('admin') && candidate.manager_id !== req.user.id) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+
+  db.prepare('DELETE FROM candidates WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
 // GET candidat details + ses dossiers
 app.get('/api/candidates/:id', authMiddleware, (req, res) => {
   const candidate = db.prepare('SELECT * FROM candidates WHERE id = ?').get(req.params.id);
@@ -442,8 +483,22 @@ app.post('/api/profiles', authMiddleware, (req, res) => {
       createdAt,
     );
   });
-
   res.status(201).json({ id: profileId });
+});
+
+// SUPPRIMER un profil
+app.delete('/api/profiles/:id', authMiddleware, (req, res) => {
+  const profile = db.prepare('SELECT * FROM profiles WHERE id = ?').get(req.params.id);
+  if (!profile) return res.status(404).json({ error: 'Dossier introuvable' });
+
+  // Security check
+  const roles = db.prepare('select role from user_roles where user_id = ?').all(req.user.id).map(r => r.role);
+  if (!roles.includes('admin') && profile.manager_id !== req.user.id) {
+    return res.status(403).json({ error: 'Accès interdit' });
+  }
+
+  db.prepare('DELETE FROM profiles WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
 });
 
 // --- ENDPOINT: analyse de CV (texte -> structure CVData) ---

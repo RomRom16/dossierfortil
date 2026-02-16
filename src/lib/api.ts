@@ -56,7 +56,7 @@ export type AppUser = {
   full_name: string;
 };
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api';
+const API_URL = import.meta.env.VITE_API_URL ?? '/api';
 
 function authHeaders(user: AppUser) {
   return {
@@ -132,11 +132,39 @@ export async function apiCreateCandidate(user: AppUser, payload: { full_name: st
   return res.json() as Promise<{ id: string }>;
 }
 
+export async function apiUpdateCandidate(user: AppUser, id: string, payload: { full_name?: string; email?: string; phone?: string }) {
+  const res = await fetch(`${API_URL}/candidates/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(user),
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Erreur lors de la mise à jour du candidat');
+  return res.json();
+}
+
 export async function apiGetCandidateDetails(user: AppUser, id: string): Promise<CandidateWithProfiles> {
   const res = await fetch(`${API_URL}/candidates/${id}`, {
     headers: authHeaders(user),
   });
   if (!res.ok) throw new Error('Erreur lors du chargement du candidat');
+  return res.json();
+}
+
+export async function apiDeleteCandidate(user: AppUser, id: string) {
+  const res = await fetch(`${API_URL}/candidates/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(user),
+  });
+  if (!res.ok) throw new Error('Erreur lors de la suppression du candidat');
+  return res.json();
+}
+
+export async function apiDeleteProfile(user: AppUser, id: string) {
+  const res = await fetch(`${API_URL}/profiles/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(user),
+  });
+  if (!res.ok) throw new Error('Erreur lors de la suppression du dossier');
   return res.json();
 }
 
@@ -153,6 +181,20 @@ export async function apiCreateProfile(user: AppUser, payload: ProfilePayload & 
   }
 
   return res.json() as Promise<{ id: string }>;
+}
+
+export async function apiParseCv(text: string) {
+  const res = await fetch(`${API_URL}/parse-cv`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Erreur lors de l\'analyse du CV');
+  }
+
+  return res.json();
 }
 
 export async function apiListProfiles(user: AppUser): Promise<ProfileWithDetails[]> {
