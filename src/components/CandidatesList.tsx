@@ -16,6 +16,8 @@ export function CandidatesList({ onSelectCandidate }: Props) {
     const [searchTerm, setSearchTerm] = useState('');
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newCandidateName, setNewCandidateName] = useState('');
+    const [newCandidateEmail, setNewCandidateEmail] = useState('');
+    const [newCandidatePhone, setNewCandidatePhone] = useState('');
 
     useEffect(() => {
         if (user) loadCandidates();
@@ -37,9 +39,15 @@ export function CandidatesList({ onSelectCandidate }: Props) {
         e.preventDefault();
         if (!newCandidateName.trim()) return;
         try {
-            const { id } = await apiCreateCandidate(user!, { full_name: newCandidateName });
+            const { id } = await apiCreateCandidate(user!, {
+                full_name: newCandidateName,
+                email: newCandidateEmail.trim() || undefined,
+                phone: newCandidatePhone.trim() || undefined
+            });
             setShowCreateModal(false);
             setNewCandidateName('');
+            setNewCandidateEmail('');
+            setNewCandidatePhone('');
             await loadCandidates(); // Refresh list
             onSelectCandidate(id); // Auto-open new candidate
         } catch (err) {
@@ -121,16 +129,40 @@ export function CandidatesList({ onSelectCandidate }: Props) {
                             <h2 className="text-xl font-bold text-gray-900">Nouveau Candidat</h2>
                         </div>
                         <form onSubmit={handleCreate} className="p-6">
-                            <div className="mb-4">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                                    value={newCandidateName}
-                                    onChange={e => setNewCandidateName(e.target.value)}
-                                    placeholder="Ex: Jean Dupont"
-                                />
+                            <div className="space-y-4 mb-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        value={newCandidateName}
+                                        onChange={e => setNewCandidateName(e.target.value)}
+                                        placeholder="Ex: Jean Dupont"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        required
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        value={newCandidateEmail}
+                                        onChange={e => setNewCandidateEmail(e.target.value)}
+                                        placeholder="jean.dupont@email.com"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                                    <input
+                                        type="tel"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                        value={newCandidatePhone}
+                                        onChange={e => setNewCandidatePhone(e.target.value)}
+                                        placeholder="06 12 34 56 78"
+                                    />
+                                </div>
                             </div>
                             <div className="flex justify-end gap-3">
                                 <button
@@ -142,7 +174,7 @@ export function CandidatesList({ onSelectCandidate }: Props) {
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={!newCandidateName.trim()}
+                                    disabled={!newCandidateName.trim() || !newCandidateEmail.trim()}
                                     className="btn-primary"
                                 >
                                     Créer
