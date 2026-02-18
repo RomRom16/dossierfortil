@@ -42,6 +42,26 @@ Then import a n8n flow from the file: [n8n_workflows/CV.pdf → Dossier_de_comp�
 
 **Important:** After importing, **activate** the workflow (toggle **Active** in the top right). The form URL is only available when the workflow is active.
 
+### Déclencher n8n depuis l’app FORTIL (frontend)
+
+Pour que le bouton **« Générer depuis CV »** dans l’app FORTIL déclenche un workflow n8n au lieu d’appeler FastAPI directement :
+
+1. **Importer le workflow webhook**  
+   Fichier : [n8n_workflows/CV2DOC-webhook-docx (trigger depuis app FORTIL).json](./n8n_workflows/CV2DOC-webhook-docx%20(trigger%20depuis%20app%20FORTIL).json)  
+   Ce workflow expose un webhook `POST` sur le chemin `cv2doc-docx`, reçoit le fichier, appelle FastAPI puis renvoie le DOCX.
+
+2. **Activer le workflow** (toggle **Active**), puis noter l’**URL de production** du nœud « Webhook DOCX » (ex. `http://fortil-n8n:5678/webhook/cv2doc-docx`).
+
+3. **Configurer le backend**  
+   Dans le `.env` à la racine du projet (ou dans les variables d’environnement du backend) :
+   ```bash
+   N8N_WEBHOOK_URL_DOCX=http://fortil-n8n:5678/webhook/cv2doc-docx
+   ```
+   En Docker, le backend et n8n sont sur le même réseau ; utilisez le nom du conteneur n8n (`fortil-n8n`) et le port interne `5678`.
+
+4. **Redémarrer le backend**  
+   À chaque requête « Générer depuis CV » depuis l’app, le backend enverra le PDF au webhook n8n, qui appellera FastAPI et renverra le DOCX.
+
 ## Execute the Flow
 
 1. **Use the Form URL**  

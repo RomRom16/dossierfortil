@@ -1,0 +1,70 @@
+{
+  "name": "CV2DOC Webhook DOCX (trigger depuis app FORTIL)",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "cv2doc-docx",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "options": {
+        "binaryPropertyName": "cv"
+      },
+      "typeVersion": 2,
+      "position": [0, 0],
+      "id": "webhook-docx-trigger",
+      "name": "Webhook DOCX",
+      "webhookId": "cv2doc-docx"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://fastapi-app:8000/process_cv/",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "cv",
+              "inputDataFieldName": "=cv"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [220, 0],
+      "id": "http-request-fastapi-docx",
+      "name": "HTTP Request FastAPI"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0],
+      "id": "respond-to-webhook-docx",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook DOCX": {
+      "main": [[{ "node": "HTTP Request FastAPI", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request FastAPI": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1", "binaryMode": "separate" },
+  "meta": {},
+  "tags": []
+}

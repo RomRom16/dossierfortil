@@ -706,7 +706,7 @@ function formatFastApiError(err) {
   return err.message || 'Erreur interne serveur';
 }
 
-// --- ENDPOINT: Génération DOCX via service externe (FastAPI) ---
+// --- ENDPOINT: Génération DOCX via n8n (si N8N_WEBHOOK_URL_DOCX) ou FastAPI ---
 app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req, res) => {
   const fs = await import('fs');
   try {
@@ -714,7 +714,6 @@ app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req
       return res.status(400).json({ error: 'Fichier CV manquant' });
     }
 
-    const fastapiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
     const axios = (await import('axios')).default;
     const FormData = (await import('form-data')).default;
 
@@ -724,11 +723,20 @@ app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req
       contentType: req.file.mimetype,
     });
 
-    console.log(`[CV2DOC] Envoi du fichier à ${fastapiUrl}/process_cv/ (via axios)`);
+    const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL_DOCX;
+    const targetUrl = n8nWebhookUrl || `${process.env.FASTAPI_URL || 'http://localhost:8000'}/process_cv/`;
 
-    const response = await axios.post(`${fastapiUrl}/process_cv/`, form, {
+    if (n8nWebhookUrl) {
+      console.log(`[CV2DOC] Envoi du fichier à n8n (${n8nWebhookUrl})`);
+    } else {
+      console.log(`[CV2DOC] Envoi du fichier à ${targetUrl} (via axios)`);
+    }
+
+    const response = await axios.post(targetUrl, form, {
       headers: form.getHeaders(),
       responseType: 'arraybuffer',
+      timeout: 120000,
+      validateStatus: (status) => status === 200,
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
