@@ -216,10 +216,14 @@ export async function apiGenerateDocx(user: AppUser, file: File): Promise<Blob> 
     if (contentType && contentType.includes('application/json')) {
       const error = await res.json();
       throw new Error(error.error || 'Erreur lors de la génération du document');
-    } else {
-      const text = await res.text();
-      throw new Error(`Erreur serveur (${res.status}): ${text.substring(0, 100)}...`);
     }
+    if (res.status === 502) {
+      throw new Error(
+        'La génération a pris trop de temps ou le backend est injoignable (502). Vérifiez que tous les conteneurs tournent (docker compose ps), reconstruisez le frontend si besoin (docker compose up --build -d frontend), puis réessayez.'
+      );
+    }
+    const text = await res.text();
+    throw new Error(`Erreur serveur (${res.status}): ${text.substring(0, 100)}...`);
   }
 
   const contentType = res?.headers?.get?.('content-type');

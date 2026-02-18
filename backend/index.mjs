@@ -715,6 +715,8 @@ function formatFastApiError(err, targetUrl) {
 // --- ENDPOINT: Génération DOCX via n8n (si N8N_WEBHOOK_URL_DOCX) ou FastAPI ---
 app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req, res) => {
   const fs = await import('fs');
+  const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL_DOCX;
+  const targetUrl = n8nWebhookUrl || `${process.env.FASTAPI_URL || 'http://localhost:8000'}/process_cv/`;
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'Fichier CV manquant' });
@@ -729,9 +731,6 @@ app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req
       contentType: req.file.mimetype,
     });
 
-    const n8nWebhookUrl = process.env.N8N_WEBHOOK_URL_DOCX;
-    const targetUrl = n8nWebhookUrl || `${process.env.FASTAPI_URL || 'http://localhost:8000'}/process_cv/`;
-
     if (n8nWebhookUrl) {
       console.log(`[CV2DOC] Envoi du fichier à n8n (${n8nWebhookUrl})`);
     } else {
@@ -741,7 +740,7 @@ app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req
     const response = await axios.post(targetUrl, form, {
       headers: form.getHeaders(),
       responseType: 'arraybuffer',
-      timeout: 120000,
+      timeout: 300000,
       validateStatus: (status) => status === 200,
     });
 
@@ -749,9 +748,15 @@ app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req
     res.setHeader('Content-Disposition', `attachment; filename="Dossier_de_Competences_${req.file.originalname.replace('.pdf', '')}.docx"`);
     res.send(Buffer.from(response.data));
   } catch (error) {
-    console.error('[CV2DOC] process-cv-docx:', error.response?.status, error.response?.data?.toString?.()?.slice(0, 200) || error.message);
-    const errorMessage = formatFastApiError(error, targetUrl);
-    res.status(500).json({ error: errorMessage });
+    console.error('[CV2DOC] process-cv-docx:', error?.response?.status, error?.response?.data?.toString?.()?.slice(0, 200) || error?.message);
+    if (!res.headersSent) {
+      try {
+        const errorMessage = formatFastApiError(error, targetUrl) || error?.message || 'Erreur lors de la génération du dossier.';
+        res.status(500).json({ error: String(errorMessage).substring(0, 500) });
+      } catch (e) {
+        try { res.status(500).json({ error: 'Erreur lors de la génération du dossier.' }); } catch (_) {}
+      }
+    }
   } finally {
     if (req.file?.path && fs.existsSync(req.file.path)) {
       try { fs.unlinkSync(req.file.path); } catch (_) {}

@@ -24,6 +24,7 @@ export default function ProfileForm({ candidateId, candidateName, onSuccess, onC
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [fallbackNotice, setFallbackNotice] = useState<string | null>(null);
 
   const [dossierTitle, setDossierTitle] = useState(`${candidateName} - Dossier de compétences`);
 
@@ -42,6 +43,7 @@ export default function ProfileForm({ candidateId, candidateName, onSuccess, onC
 
     setAnalyzing(true);
     setError(null);
+    setFallbackNotice(null);
 
     try {
       let parsed: any;
@@ -52,6 +54,7 @@ export default function ProfileForm({ candidateId, candidateName, onSuccess, onC
           parsed = await apiParseCvGemini(user, file);
         } catch (geminiErr) {
           console.warn("Échec du parsing Gemini, passage au parsing texte classique", geminiErr);
+          setFallbackNotice("Extraction par IA (Gemini) indisponible ; le formulaire a été pré-rempli à partir du texte du PDF.");
         }
       }
 
@@ -209,6 +212,13 @@ export default function ProfileForm({ candidateId, candidateName, onSuccess, onC
               onChange={e => setTools(e.target.value)}
             />
           </div>
+
+          {fallbackNotice && (
+            <div className="p-4 bg-amber-50 text-amber-800 rounded-lg flex items-center gap-2 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              {fallbackNotice}
+            </div>
+          )}
 
           {error && (
             <div className="p-4 bg-red-50 text-red-700 rounded-lg flex items-center gap-2">
