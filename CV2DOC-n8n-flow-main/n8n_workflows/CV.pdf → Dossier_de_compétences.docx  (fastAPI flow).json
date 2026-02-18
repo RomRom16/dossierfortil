@@ -1,0 +1,113 @@
+{
+  "name": "CV.pdf → Dossier_de_compétences.docx  (fastAPI flow)",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "CV.pdf → Dossier_de_compétences.docx ",
+        "formDescription": "Téléverse ton CV au format PDF afin de créer, sur cette base, un dossier de compétences au format DOCX.\n\nL’IA analysera ton CV pour te faciliter le remplissage du dossier de compétences.\n",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "PDF",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Confirmer"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e8ff8f84-1309-4766-9ee3-ac385cae1bbe",
+      "name": "On form submission",
+      "webhookId": "9cfe2839-3f27-4b0c-8dc0-5754aa1aad63"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://fastapi-app:8000/process_cv/",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "cv",
+              "inputDataFieldName": "=PDF"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f1c33c34-dfd4-4ff0-8cb0-a5097ba74052",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "Votre dossier de compétences est prêt à être enregistré",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        416,
+        0
+      ],
+      "id": "40aee306-5109-4c8a-baf0-c4899dcf3322",
+      "name": "Form",
+      "webhookId": "f724bd66-19d3-4964-9d61-d1772eff221d"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "515616e6-dbc1-4aca-9236-6b00ac16df8e",
+  "meta": {
+    "instanceId": "497ec524a3ce508621f71db55d542f968d771920d48a4c04f768c025d0d83d89"
+  },
+  "id": "ai-mNCecRY-YSDqxVD4_z",
+  "tags": []
+}

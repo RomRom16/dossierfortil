@@ -1,0 +1,17 @@
+# Test images
+*.jpeg
+*.jpg
+
+# Test pdfs
+*.pdf
+
+# Test jsons
+*.json
+
+# secrets
+.env
+
+# Inner directories
+CVs/
+JSON_outputs/
+results/

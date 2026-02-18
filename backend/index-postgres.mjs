@@ -255,14 +255,14 @@ app.get('/api/health', (req, res) => {
 // Auth endpoints
 app.post('/api/auth/signup', async (req, res) => {
     try {
-        const { email, id, full_name } = req.body;
-        const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
+        const normalizedEmail = email.trim().toLowerCase();
+        const existing = await sql`SELECT id FROM users WHERE email = ${normalizedEmail}`;
 
         if (existing.length > 0) {
             return res.status(400).json({ error: 'Ce compte existe déjà' });
         }
 
-        await sql`INSERT INTO users (id, email, full_name) VALUES (${id}, ${email}, ${full_name})`;
+        await sql`INSERT INTO users (id, email, full_name) VALUES (${id}, ${normalizedEmail}, ${full_name})`;
         await ensureDefaultRole(id);
 
         res.json({ success: true });
@@ -274,8 +274,8 @@ app.post('/api/auth/signup', async (req, res) => {
 
 app.post('/api/auth/signin', async (req, res) => {
     try {
-        const { email } = req.body;
-        const user = await sql`SELECT * FROM users WHERE email = ${email}`;
+        const normalizedEmail = email.trim().toLowerCase();
+        const user = await sql`SELECT * FROM users WHERE email = ${normalizedEmail}`;
 
         if (user.length === 0) {
             return res.status(401).json({ error: 'Compte introuvable. Veuillez vous inscrire.' });
@@ -307,7 +307,8 @@ app.get('/api/user/roles', authMiddleware, async (req, res) => {
 
 app.get('/api/me/candidate', authMiddleware, async (req, res) => {
     try {
-        let candidate = await sql`SELECT * FROM candidates WHERE email = ${req.user.email}`;
+        const normalizedEmail = req.user.email.toLowerCase();
+        let candidate = await sql`SELECT * FROM candidates WHERE email = ${normalizedEmail}`;
 
         if (candidate.length === 0) {
             const id = randomUUID();
@@ -344,7 +345,7 @@ app.get('/api/candidates', authMiddleware, async (req, res) => {
             candidates = await sql`
                 SELECT * FROM candidates 
                 WHERE manager_id = ${req.user.id} 
-                AND email != ${req.user.email}
+                AND email != ${req.user.email.toLowerCase()}
                 ORDER BY created_at DESC
             `;
         } else {
@@ -370,10 +371,11 @@ app.post('/api/candidates', authMiddleware, async (req, res) => {
 
         const id = randomUUID();
         const timestamp = now();
+        const normalizedEmail = email ? email.trim().toLowerCase() : null;
 
         await sql`
       INSERT INTO candidates (id, manager_id, full_name, email, phone, created_at, updated_at)
-      VALUES (${id}, ${req.user.id}, ${full_name}, ${email || null}, ${phone || null}, ${timestamp}, ${timestamp})
+      VALUES (${id}, ${req.user.id}, ${full_name}, ${normalizedEmail}, ${phone || null}, ${timestamp}, ${timestamp})
     `;
 
         // Pre-create user account if email is provided
@@ -507,11 +509,12 @@ app.put('/api/candidates/:id', authMiddleware, async (req, res) => {
             return res.status(403).json({ error: 'Accès interdit' });
         }
 
+        const normalizedEmail = email ? email.trim().toLowerCase() : email;
         const updatedAt = now();
         await sql`
       UPDATE candidates 
       SET full_name = COALESCE(${full_name}, full_name),
-          email = ${email},
+          email = ${normalizedEmail},
           phone = ${phone},
           updated_at = ${updatedAt}
       WHERE id = ${req.params.id}

@@ -1,0 +1,28 @@
+[project]
+name = "cv2doc"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "docxtpl>=0.20.2",
+    "jinja2>=3.1.6",
+    "langchain-google-genai>=4.1.1",
+    "lxml>=6.0.2",
+    "markupsafe>=3.0.3",
+    "pydantic>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "pymupdf>=1.26.7",
+    "pypdf>=6.6.0",
+    "python-docx>=1.2.0",
+    "typing-extensions>=4.15.0",
+]
+
+[dependency-groups]
+dev = [
+    "google-generativeai>=0.8.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

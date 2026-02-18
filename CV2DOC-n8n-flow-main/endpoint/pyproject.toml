@@ -1,0 +1,13 @@
+[project]
+name = "endpoint"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "cv2doc",
+    "fastapi[standard]>=0.128.5",
+]
+
+[tool.uv.sources]
+cv2doc = { path = "../cv2doc" }

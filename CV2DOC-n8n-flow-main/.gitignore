@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# IDE files
+.vscode/
+.idea/
+
+# Test images
+*.jpeg
+*.jpg
+
+# secrets
+.env
+
+# macOS files
+*.DS_Store
+
+# Microsoft Office temp files
+~$*

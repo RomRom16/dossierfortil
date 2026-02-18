@@ -261,21 +261,21 @@ function authMiddleware(req, res, next) {
 app.post('/api/auth/signup', (req, res) => {
   const { email, id, full_name } = req.body;
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(normalizedEmail);
   if (existing) {
     return res.status(400).json({ error: 'Ce compte existe déjà' });
   }
 
-  db.prepare('INSERT INTO users (id, email, full_name) VALUES (?, ?, ?)').run(id, email, full_name);
+  db.prepare('INSERT INTO users (id, email, full_name) VALUES (?, ?, ?)').run(id, normalizedEmail, full_name);
   ensureDefaultRole(id);
 
   res.json({ success: true });
 });
 
 app.post('/api/auth/signin', (req, res) => {
-  const { email } = req.body;
-
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(normalizedEmail);
   if (!user) {
     return res.status(401).json({ error: 'Compte introuvable. Veuillez vous inscrire.' });
   }
@@ -324,8 +324,9 @@ app.get('/api/me', authMiddleware, (req, res) => {
 });
 
 app.get('/api/me/candidate', authMiddleware, (req, res) => {
-  // Un consultant est son propre candidat. On cherche par email.
-  let candidate = db.prepare('SELECT * FROM candidates WHERE email = ?').get(req.user.email);
+  // Un consultant est son propre candidat. On cherche par email (normalisé).
+  const normalizedEmail = req.user.email.toLowerCase();
+  let candidate = db.prepare('SELECT * FROM candidates WHERE email = ?').get(normalizedEmail);
 
   if (!candidate) {
     // On crée un candidat pour lui-même
@@ -395,7 +396,7 @@ app.get('/api/candidates', authMiddleware, (req, res) => {
     candidates = db.prepare('SELECT * FROM candidates ORDER BY datetime(created_at) DESC').all();
   } else if (isBusinessManager) {
     // Un BM voit les candidats qu'il gère, MAIS "pas pour lui"
-    candidates = db.prepare('SELECT * FROM candidates WHERE manager_id = ? AND email != ? ORDER BY datetime(created_at) DESC').all(req.user.id, req.user.email);
+    candidates = db.prepare('SELECT * FROM candidates WHERE manager_id = ? AND email != ? ORDER BY datetime(created_at) DESC').all(req.user.id, req.user.email.toLowerCase());
   } else {
     // Consultant : ne devrait pas appeler ce endpoint normalement, mais on sécurise
     candidates = [];
@@ -419,11 +420,12 @@ app.post('/api/candidates', authMiddleware, (req, res) => {
 
   const id = randomUUID();
   const createdAt = now();
+  const normalizedEmail = email ? email.trim().toLowerCase() : null;
 
   db.prepare(`
     INSERT INTO candidates (id, manager_id, full_name, email, phone, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?)
-  `).run(id, req.user.id, full_name, email || null, phone || null, createdAt, createdAt);
+  `).run(id, req.user.id, full_name, normalizedEmail, phone || null, createdAt, createdAt);
 
   // Si on a un email, on pré-crée le compte utilisateur pour que le candidat puisse se connecter
   if (email && email.trim()) {
@@ -455,6 +457,8 @@ app.put('/api/candidates/:id', authMiddleware, (req, res) => {
   }
 
   const updatedAt = now();
+  const normalizedEmail = email ? email.trim().toLowerCase() : email;
+
   db.prepare(`
     UPDATE candidates 
     SET full_name = COALESCE(?, full_name), 
@@ -462,7 +466,7 @@ app.put('/api/candidates/:id', authMiddleware, (req, res) => {
         phone = ?, 
         updated_at = ?
     WHERE id = ?
-  `).run(full_name, email, phone, updatedAt, req.params.id);
+  `).run(full_name, normalizedEmail, phone, updatedAt, req.params.id);
 
   res.json({ success: true });
 });
