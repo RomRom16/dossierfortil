@@ -53,7 +53,8 @@ docker compose up --build -d
 Pour générer un dossier de compétences directement depuis un CV :
 1. Connectez-vous à la plateforme.
 
-**Optionnel — faire passer la génération par n8n :** définissez `N8N_WEBHOOK_URL_DOCX` (ex. `http://fortil-n8n:5678/webhook/cv2doc-docx`) dans le `.env` et importez/activez le workflow [CV2DOC-webhook-docx](CV2DOC-n8n-flow-main/n8n_workflows/) dans n8n. Chaque clic sur « Générer depuis CV » déclenchera alors le workflow n8n. Voir [CV2DOC-n8n-flow-main/README.md](CV2DOC-n8n-flow-main/README.md).
+**En Docker**, la génération DOCX passe par n8n par défaut (`http://fortil-n8n:5678/webhook/cv2doc-docx`). Importez et activez le workflow [CV2DOC-webhook-docx](CV2DOC-n8n-flow-main/n8n_workflows/) dans n8n. Pour désactiver : `N8N_WEBHOOK_URL_DOCX=` dans le `.env`.  
+**En local (sans Docker), optionnel :** définissez `N8N_WEBHOOK_URL_DOCX` (ex. `http://localhost:5678/webhook/cv2doc-docx`) dans le `.env` et importez/activez le workflow [CV2DOC-webhook-docx](CV2DOC-n8n-flow-main/n8n_workflows/) dans n8n. Chaque clic sur « Générer depuis CV » déclenchera alors le workflow n8n. Voir [CV2DOC-n8n-flow-main/README.md](CV2DOC-n8n-flow-main/README.md).
 
 2. Allez sur la fiche d'un **Candidat**.
 3. Cliquez sur le bouton **"Générer depuis CV"**.
