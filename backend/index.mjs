@@ -2,12 +2,20 @@ import express from 'express';
 import cors from 'cors';
 import Database from 'better-sqlite3';
 import { randomUUID } from 'crypto';
+import multer from 'multer';
+
+const upload = multer({ dest: 'uploads/' });
+import fs from 'fs';
+if (!fs.existsSync('uploads')) fs.mkdirSync('uploads');
 
 const app = express();
 const db = new Database('./profiles.db');
 
 // Middleware
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:8080'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Health check
@@ -274,6 +282,8 @@ app.post('/api/auth/signup', (req, res) => {
 });
 
 app.post('/api/auth/signin', (req, res) => {
+  const { email } = req.body || {};
+  if (!email) return res.status(400).json({ error: 'Email requis' });
   const normalizedEmail = email.trim().toLowerCase();
   const user = db.prepare('SELECT * FROM users WHERE email = ?').get(normalizedEmail);
   if (!user) {
@@ -666,6 +676,81 @@ app.post('/api/parse-cv', async (req, res) => {
           ? error.message
           : 'Erreur interne lors de l\'analyse du CV',
     });
+  }
+});
+
+// --- ENDPOINT: Génération DOCX via service externe (FastAPI) ---
+app.post('/api/process-cv-docx', authMiddleware, upload.single('cv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Fichier CV manquant' });
+    }
+
+    const fastapiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+    const axios = (await import('axios')).default;
+    const FormData = (await import('form-data')).default;
+    const fs = await import('fs');
+
+    const form = new FormData();
+    form.append('cv', fs.createReadStream(req.file.path), {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+
+    console.log(`[CV2DOC] Envoi du fichier à ${fastapiUrl}/process_cv/ (via axios)`);
+
+    const response = await axios.post(`${fastapiUrl}/process_cv/`, form, {
+      headers: form.getHeaders(),
+      responseType: 'arraybuffer',
+    });
+
+    // Nettoyage du fichier temporaire
+    fs.unlinkSync(req.file.path);
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename="Dossier_de_Competences_${req.file.originalname.replace('.pdf', '')}.docx"`);
+    res.send(Buffer.from(response.data));
+
+  } catch (error) {
+    console.error('Erreur dans /api/process-cv-docx:', error.response?.data?.toString() || error.message);
+    const errorMessage = error.response?.data?.toString() || error.message;
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
+// --- ENDPOINT: Parsing CV via Gemini (FastAPI) ---
+app.post('/api/parse-cv-gemini', authMiddleware, upload.single('cv'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'Fichier CV manquant' });
+    }
+
+    const fastapiUrl = process.env.FASTAPI_URL || 'http://localhost:8000';
+    const axios = (await import('axios')).default;
+    const FormData = (await import('form-data')).default;
+    const fs = await import('fs');
+
+    const form = new FormData();
+    form.append('cv', fs.createReadStream(req.file.path), {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
+    });
+
+    console.log(`[CV2DOC] Extraction JSON via ${fastapiUrl}/extract_json/ (via axios)`);
+
+    const response = await axios.post(`${fastapiUrl}/extract_json/`, form, {
+      headers: form.getHeaders(),
+    });
+
+    // Nettoyage du fichier temporaire
+    fs.unlinkSync(req.file.path);
+
+    res.json(response.data);
+
+  } catch (error) {
+    console.error('Erreur dans /api/parse-cv-gemini:', error.response?.data?.toString() || error.message);
+    const errorMessage = error.response?.data?.toString() || error.message;
+    res.status(500).json({ error: errorMessage });
   }
 });
 

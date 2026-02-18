@@ -197,6 +197,62 @@ export async function apiParseCv(text: string) {
   return res.json();
 }
 
+export async function apiGenerateDocx(user: AppUser, file: File): Promise<Blob> {
+  const formData = new FormData();
+  formData.append('cv', file);
+
+  const res = await fetch(`${API_URL}/process-cv-docx`, {
+    method: 'POST',
+    headers: {
+      'x-user-id': user.id,
+      'x-user-email': user.email,
+      'x-user-name': user.full_name,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const error = await res.json();
+      throw new Error(error.error || 'Erreur lors de la génération du document');
+    } else {
+      const text = await res.text();
+      throw new Error(`Erreur serveur (${res.status}): ${text.substring(0, 100)}...`);
+    }
+  }
+
+  return res.blob();
+}
+
+export async function apiParseCvGemini(user: AppUser, file: File) {
+  const formData = new FormData();
+  formData.append('cv', file);
+
+  const res = await fetch(`${API_URL}/parse-cv-gemini`, {
+    method: 'POST',
+    headers: {
+      'x-user-id': user.id,
+      'x-user-email': user.email,
+      'x-user-name': user.full_name,
+    },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const error = await res.json();
+      throw new Error(error.error || 'Erreur lors de l\'analyse du document');
+    } else {
+      const text = await res.text();
+      throw new Error(`Erreur serveur (${res.status}): ${text.substring(0, 100)}...`);
+    }
+  }
+
+  return res.json();
+}
+
 export async function apiListProfiles(user: AppUser): Promise<ProfileWithDetails[]> {
   const res = await fetch(`${API_URL}/profiles`, {
     headers: authHeaders(user),

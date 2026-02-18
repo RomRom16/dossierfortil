@@ -1,0 +1,89 @@
+{
+  "nom": "Roméo PROBST",
+  "téléphone": "+33695069224",
+  "secteur_d_activité": "Développement Web et Gestion de Projet",
+  "expertises": [
+    {
+      "titre_expertise": "Développement Web et Mobile",
+      "expertises": "- PHP (Natif, Laravel) - JS (ReactJs, React native, NodeJs) - HTML/CSS (Tailwind, Bootstrap) - C# / .NET - DB (PostgreSQL, MySQL, Oracle, MongoDB) - Développement mobile (Android Java, Flutter, PWA)",
+      "niveau_expertise": "Junior"
+    },
+    {
+      "titre_expertise": "Gestion de projet",
+      "expertises": "- Kanban / Grant - Agile / Scrum - Chiffrage / Planification - Gestion d'équipe / Suivi d'un planning - Gestion des budgets / charges",
+      "niveau_expertise": "Junior"
+    },
+    {
+      "titre_expertise": "DevOps",
+      "expertises": "- Docker - Kubernetes",
+      "niveau_expertise": "Junior"
+    }
+  ],
+  "savoir_etre": [
+    {
+      "compétence": "Travail d'équipe"
+    },
+    {
+      "compétence": "Sociable"
+    },
+    {
+      "compétence": "Curieux"
+    }
+  ],
+  "langues": [
+    {
+      "langue": "Anglais",
+      "niveau": "INFO NON DISPONIBLE"
+    }
+  ],
+  "expériences": [
+    {
+      "début": "Septembre 2023",
+      "fin": "Novembre 2025",
+      "société": "Eurométropole de Strasbourg",
+      "secteur_activité": "Secteur public / Administration",
+      "programme": "Application de saisie d'indicateurs et étude PWA",
+      "poste": "Alternance développeur Web et chef de projet",
+      "objectif": "L'objectif était de développer une application de saisie d'indicateurs pour les espaces verts et de mener des études de besoins pour des solutions PWA.",
+      "activités": "- Il a occupé le poste de chef de projet et développeur pour une application de saisie d'indicateurs destinée aux espaces verts. - Il a également mené l'étude des besoins et la réalisation de preuves de concept (POC) pour des développements de type Progressive Web App (PWA).",
+      "environnement_technique": "- PWA",
+      "expertise_mobilisées": "- Gestion de projet - Développement Web - PWA"
+    },
+    {
+      "début": "Septembre 2022",
+      "fin": "Août 2023",
+      "société": "Eurométropole de Strasbourg",
+      "secteur_activité": "Secteur public / Administration",
+      "programme": "Maintenance applicative et création d'application mobile",
+      "poste": "Alternance développeur Web",
+      "objectif": "L'objectif consistait à faire évoluer des applications existantes, assurer leur maintenance et créer une application mobile pour l'organigramme.",
+      "activités": "- Il a ajouté des fonctionnalités dans une application de gestion d'alerte. - Il a assuré la maintenance d'applications métiers. - Il a créé une application mobile pour l'organigramme de la collectivité.",
+      "environnement_technique": "INFO NON DÉTAILLÉE",
+      "expertise_mobilisées": "- Développement Web - Développement Mobile"
+    },
+    {
+      "début": "Avril 2022",
+      "fin": "Juillet 2022",
+      "société": "Eurométropole de Strasbourg",
+      "secteur_activité": "Secteur public / Administration",
+      "programme": "Formulaire de récolte d'indicateurs de chantiers",
+      "poste": "Stage FullStack",
+      "objectif": "L'objectif était de créer un formulaire pour la récolte d'indicateurs sur les chantiers.",
+      "activités": "- Il a réalisé un formulaire destiné à la récolte d'indicateurs sur les chantiers de l'Eurométropole.",
+      "environnement_technique": "- PHP - PostgreSQL/MCD - JS - CSS",
+      "expertise_mobilisées": "- Développement FullStack"
+    },
+    {
+      "début": "2016",
+      "fin": "2018",
+      "société": "Association \"Marché paysan\" de Dambach-la-ville",
+      "secteur_activité": "Associatif / Événementiel",
+      "programme": "Sonorisation pour le Marché paysan",
+      "poste": "Ingénieur son",
+      "objectif": "L'objectif était d'assurer la sonorisation lors des événements de l'association.",
+      "activités": "- Il a assuré les missions d'ingénieur du son pour l'association Marché paysan à raison de trois interventions de huit jours par an.",
+      "environnement_technique": "INFO NON DÉTAILLÉE",
+      "expertise_mobilisées": "- Ingénierie du son"
+    }
+  ]
+}

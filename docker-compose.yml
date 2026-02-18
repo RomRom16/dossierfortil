@@ -1,6 +1,40 @@
 version: '3.8'
 
 services:
+  fastapi-app:
+    build:
+      context: ./CV2DOC-n8n-flow-main
+    container_name: fortil-fastapi
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+      - AI_API_KEY=${AI_API_KEY}
+      - PROMPT_PATH=/app/cv2doc/src/cv2doc/analyse_cv/prompt.md
+      - DOX_TEMPLATE_PATH=/app/cv2doc/src/cv2doc/json2doc/template.docx
+      - JSON_OUTPUT_DIR=/app/JSON_outputs
+      - RESULTS_DIR=/app/results
+    volumes:
+      - ./CV2DOC-n8n-flow-main/JSON_outputs:/app/JSON_outputs
+      - ./CV2DOC-n8n-flow-main/results:/app/results
+    networks:
+      - fortil-network
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: fortil-n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - fastapi-app
+    networks:
+      - fortil-network
+
   backend:
     build: ./backend
     container_name: fortil-backend
@@ -11,7 +45,10 @@ services:
     environment:
       - NODE_ENV=production
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - FASTAPI_URL=http://fastapi-app:8000
     restart: always
+    networks:
+      - fortil-network
 
   frontend:
     build: .
@@ -21,3 +58,12 @@ services:
     depends_on:
       - backend
     restart: always
+    networks:
+      - fortil-network
+
+volumes:
+  n8n_data:
+
+networks:
+  fortil-network:
+    driver: bridge

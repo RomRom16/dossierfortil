@@ -29,9 +29,9 @@ Le projet est divisé en trois composants principaux :
 1. Clonez le dépôt.
 2. Créez un fichier `.env` à la racine en vous basant sur `.env.example`.
 3. Configurez les variables d'environnement suivantes :
-   ```env
-   # Backend
+   # API Keys
    OPENAI_API_KEY=votre_cle_openai
+   AI_API_KEY=votre_cle_gemini_pour_cv2doc
    PORT=4000
 
    # Frontend
@@ -40,21 +40,22 @@ Le projet est divisé en trois composants principaux :
    ```
 
 ### Lancement avec Docker
-Le moyen le plus simple de lancer l'application complète est d'utiliser Docker Compose :
+Le moyen le plus simple de lancer l'application complète est d'utiliser Docker Compose. Cela démarrera le frontend, le backend, le service d'analyse de CV (FastAPI) et n8n.
 
 ```bash
 docker compose up --build -d
 ```
-- Frontend : `http://localhost:8080`
-- Backend : `http://localhost:4000`
+- **Frontend** : `http://localhost:8080` (Interface utilisateur principale)
+- **Backend API** : `http://localhost:4000`
+- **n8n** : `http://localhost:5678` (Workflow automation)
 
-### Pipeline CV2DOC (Optionnel)
-Si vous souhaitez utiliser le pipeline n8n :
-```bash
-cd CV2DOC-n8n-flow-main
-docker compose up -d
-```
-- n8n : `http://localhost:5678`
+### Utilisation de CV2DOC
+Pour générer un dossier de compétences directement depuis un CV :
+1. Connectez-vous à la plateforme.
+2. Allez sur la fiche d'un **Candidat**.
+3. Cliquez sur le bouton **"Générer depuis CV"**.
+4. Sélectionnez un fichier **PDF**.
+5. Le système extraira les données et vous proposera de télécharger le fichier **.docx** généré.
 
 ## 📂 Structure du Projet
 

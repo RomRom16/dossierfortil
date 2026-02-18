@@ -9,14 +9,14 @@ from langchain_core.messages import SystemMessage, HumanMessage
 def analyze_img(image_data, settings):
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-3-flash-preview", 
+        model="gemini-1.5-flash", 
         temperature=0,
         api_key=settings.ai_api_key.get_secret_value()
     )
 
     structured_llm = llm.with_structured_output(schema=CVSchema)
 
-    human_message_content: dict[str, Any] = []
+    human_message_content: list[dict[str, Any]] = []
 
     for img_url in image_data:
         human_message_content.append({

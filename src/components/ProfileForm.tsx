@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiCreateProfile, apiParseCv } from '../lib/api';
+import { apiCreateProfile, apiParseCv, apiParseCvGemini } from '../lib/api';
 import { Upload, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
 
@@ -44,24 +44,38 @@ export default function ProfileForm({ candidateId, candidateName, onSuccess, onC
     setError(null);
 
     try {
-      let text = '';
-      if (file.type === 'application/pdf') {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjs.getDocument(arrayBuffer).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          const strings = content.items.map((item: any) => item.str);
-          fullText += strings.join(' ') + '\n';
+      let parsed: any;
+
+      // Essayer d'utiliser le moteur Gemini (CV2DOC) plus puissant si c'est un PDF
+      if (file.type === 'application/pdf' && user) {
+        try {
+          parsed = await apiParseCvGemini(user, file);
+        } catch (geminiErr) {
+          console.warn("Échec du parsing Gemini, passage au parsing texte classique", geminiErr);
         }
-        text = fullText;
-      } else {
-        text = await file.text();
       }
 
-      const parsed = await apiParseCv(text);
+      // Fallback ou si ce n'est pas un PDF
+      if (!parsed) {
+        let text = '';
+        if (file.type === 'application/pdf') {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+          let fullText = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const strings = content.items.map((item: any) => item.str);
+            fullText += strings.join(' ') + '\n';
+          }
+          text = fullText;
+        } else {
+          text = await file.text();
+        }
+        parsed = await apiParseCv(text);
+      }
 
+      if (parsed.full_name) setDossierTitle(`${parsed.full_name} - Dossier de compétences`);
       if (parsed.roles) setRoles(Array.isArray(parsed.roles) ? parsed.roles.join(', ') : parsed.roles);
       if (parsed.candidate_description) setDescription(parsed.candidate_description);
       if (parsed.general_expertises) setExpertises(Array.isArray(parsed.general_expertises) ? parsed.general_expertises.join(', ') : '');
