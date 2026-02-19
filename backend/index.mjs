@@ -695,13 +695,20 @@ function formatFastApiError(err, targetUrl) {
     return `Le service ${serviceName} a mis trop de temps à répondre. Réessayez avec un CV plus court.`;
   }
   const data = err.response?.data;
-  if (data != null) {
+  const status = err.response?.status;
+  if (data != null || status === 404) {
+    const msg = typeof data === 'object' && data?.message ? data.message : (typeof data === 'string' ? data : '');
+    if (status === 404 && (msg.includes('not registered') || msg.includes('webhook'))) {
+      return 'Le workflow n8n n’est pas activé. Dans n8n (http://localhost:5678), ouvrez le workflow « CV2DOC Webhook DOCX », activez-le (toggle Actif en haut à droite), enregistrez, et utilisez l’URL de production (pas l’URL de test).';
+    }
     if (typeof data === 'string') return data.substring(0, 300);
     if (Buffer.isBuffer(data) || data instanceof ArrayBuffer) {
       try {
-        return Buffer.from(data).toString('utf8').substring(0, 300) || `Erreur HTTP ${err.response?.status || 500}`;
+        const str = Buffer.from(data).toString('utf8');
+        if (str.includes('not registered')) return 'Le workflow n8n n’est pas activé. Activez le workflow « CV2DOC Webhook DOCX » dans n8n et utilisez l’URL de production (/webhook/cv2doc-docx).';
+        return str.substring(0, 300) || `Erreur HTTP ${status || 500}`;
       } catch (_) {
-        return `Erreur HTTP ${err.response?.status || 500}`;
+        return `Erreur HTTP ${status || 500}`;
       }
     }
     if (typeof data === 'object' && data.detail) {

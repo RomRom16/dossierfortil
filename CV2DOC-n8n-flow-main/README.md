@@ -50,7 +50,7 @@ Pour que le bouton **« Générer depuis CV »** dans l’app FORTIL déclenche 
    Fichier : [n8n_workflows/CV2DOC-webhook-docx (trigger depuis app FORTIL).json](./n8n_workflows/CV2DOC-webhook-docx%20(trigger%20depuis%20app%20FORTIL).json)  
    Ce workflow expose un webhook `POST` sur le chemin `cv2doc-docx`, reçoit le fichier, appelle FastAPI puis renvoie le DOCX.
 
-2. **Activer le workflow** (toggle **Active**), puis noter l’**URL de production** du nœud « Webhook DOCX » (ex. `http://fortil-n8n:5678/webhook/cv2doc-docx`).
+2. **Activer le workflow** (toggle **Active** en haut à droite), **sauvegarder**. Sans cela, l’URL de production n’est pas enregistrée et l’app renverra « webhook not registered » (404). Utilisez l’**URL de production** (`/webhook/cv2doc-docx`), pas l’URL de test (`/webhook-test/...`), pour que l’app puisse appeler le webhook à tout moment.
 
 3. **Configurer le backend**  
    Dans le `.env` à la racine du projet (ou dans les variables d’environnement du backend) :
@@ -81,6 +81,13 @@ If you see **"Method not allowed - please check you are using the right HTTP met
 
 3. **Reverse proxy**  
    If n8n is behind Nginx or another proxy, ensure the form path allows **GET** and **POST**. Some proxies block GET on webhook paths and cause 405.
+
+## Troubleshooting: "The requested webhook is not registered" (404)
+
+Si l’app affiche une erreur du type **webhook \"cv2doc-docx\" is not registered** :
+
+1. **Activez le workflow** : dans n8n, ouvrez le workflow « CV2DOC Webhook DOCX », passez le toggle **Active** à ON (en haut à droite), puis **Sauvegarder**.
+2. **Utilisez l’URL de production** : le backend doit appeler `http://fortil-n8n:5678/webhook/cv2doc-docx` (avec **/webhook/**), pas `/webhook-test/...`. L’URL de test ne reste enregistrée que le temps d’un test manuel après un clic sur « Execute workflow ».
 
 ## Troubleshooting: requête vers FastAPI sans le bon chemin
 

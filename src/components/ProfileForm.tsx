@@ -3,11 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { apiCreateProfile, apiParseCv, apiParseCvGemini } from '../lib/api';
 import { Upload, AlertCircle, CheckCircle, ArrowLeft } from 'lucide-react';
 import { pdfjs } from 'react-pdf';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Worker PDF config - using a safer initialization
-if (typeof window !== 'undefined' && pdfjs.version) {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-}
+// Worker PDF.js via Vite (?url) = même origine, pas de CORS ni unpkg
+pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 
 type Props = {

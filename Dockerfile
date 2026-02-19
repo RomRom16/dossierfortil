@@ -7,6 +7,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+RUN node scripts/copy-pdf-worker.cjs
 RUN npm run build
 
 # Production stage
