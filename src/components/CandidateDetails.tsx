@@ -23,6 +23,7 @@ export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreat
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
     const [documents, setDocuments] = useState<CandidateDocument[]>([]);
+    const [docxError, setDocxError] = useState<string | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editForm, setEditForm] = useState({ full_name: '', email: '', phone: '' });
 
@@ -34,6 +35,7 @@ export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreat
         const file = e.target.files?.[0];
         if (!file || !user) return;
 
+        setDocxError(null);
         try {
             setGenerating(true);
             const blob = await apiGenerateDocx(user, file, candidateId);
@@ -60,11 +62,24 @@ export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreat
             if (fileInputRef.current) fileInputRef.current.value = '';
         } catch (err) {
             console.error(err);
-            alert('Erreur lors de la génération du dossier : ' + (err as Error).message);
+            setDocxError((err as Error).message);
         } finally {
             setGenerating(false);
         }
     };
+
+    const n8nUrl = (() => {
+        const u = import.meta.env.VITE_N8N_URL;
+        if (u) return u;
+        const api = import.meta.env.VITE_API_URL ?? '';
+        try {
+            const url = new URL(api, window.location.origin);
+            url.port = '5678';
+            return url.toString();
+        } catch {
+            return 'http://localhost:5678';
+        }
+    })();
 
     const handleDownloadDocument = async (doc: CandidateDocument) => {
         if (!user) return;
@@ -293,6 +308,29 @@ export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreat
                                     Nouveau Dossier
                                 </button>
                             </div>
+                            {docxError && (
+                                <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
+                                    <p className="font-medium">Erreur lors de la génération du dossier</p>
+                                    <p className="mt-1">{docxError}</p>
+                                    {docxError.includes('n8n') && docxError.includes('workflow') && (
+                                        <a
+                                            href={n8nUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1 mt-2 text-amber-700 font-semibold hover:underline"
+                                        >
+                                            Ouvrir n8n pour activer le workflow →
+                                        </a>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setDocxError(null)}
+                                        className="block mt-2 text-amber-600 hover:underline text-xs"
+                                    >
+                                        Fermer
+                                    </button>
+                                </div>
+                            )}
                         )}
                     </div>
 
