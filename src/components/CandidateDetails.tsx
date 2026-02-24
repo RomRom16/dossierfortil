@@ -280,35 +280,36 @@ export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreat
                             </p>
                         </div>
                         {canManage && (
-                            <div className="flex gap-3">
-                                <input
-                                    type="file"
-                                    ref={fileInputRef}
-                                    onChange={handleGenerateDocx}
-                                    accept=".pdf"
-                                    className="hidden"
-                                />
-                                <button
-                                    onClick={() => fileInputRef.current?.click()}
-                                    disabled={generating}
-                                    className="bg-white border border-orange-500 text-orange-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-50 transition-all flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {generating ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Upload className="w-4 h-4" />
-                                    )}
-                                    Générer depuis CV
-                                </button>
-                                <button
-                                    onClick={() => onCreateDossier(data.full_name)}
-                                    className="btn-primary flex items-center gap-2"
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    Nouveau Dossier
-                                </button>
-                            </div>
-                            {docxError && (
+                            <>
+                                <div className="flex gap-3">
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleGenerateDocx}
+                                        accept=".pdf"
+                                        className="hidden"
+                                    />
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={generating}
+                                        className="bg-white border border-orange-500 text-orange-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-orange-50 transition-all flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {generating ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Upload className="w-4 h-4" />
+                                        )}
+                                        Générer depuis CV
+                                    </button>
+                                    <button
+                                        onClick={() => onCreateDossier(data.full_name)}
+                                        className="btn-primary flex items-center gap-2"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Nouveau Dossier
+                                    </button>
+                                </div>
+                                {docxError && (
                                 <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm">
                                     <p className="font-medium">Erreur lors de la génération du dossier</p>
                                     <p className="mt-1">{docxError}</p>
@@ -331,6 +332,7 @@ export function CandidateDetails({ candidateId, onBack, onSelectDossier, onCreat
                                     </button>
                                 </div>
                             )}
+                            </>
                         )}
                     </div>
 
