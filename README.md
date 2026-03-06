@@ -28,16 +28,7 @@ Le projet est divisé en trois composants principaux :
 ### Configuration
 1. Clonez le dépôt.
 2. Créez un fichier `.env` à la racine en vous basant sur `.env.example`.
-3. Configurez les variables d'environnement suivantes :
-   # API Keys
-   OPENAI_API_KEY=votre_cle_openai
-   AI_API_KEY=votre_cle_gemini_pour_cv2doc
-   PORT=4000
-
-   # Frontend
-   VITE_SUPABASE_URL=votre_url_supabase
-   VITE_SUPABASE_ANON_KEY=votre_cle_anonyme
-   ```
+3. Configurez les variables d'environnement (voir `.env.example` pour la liste complète).
 
 ### Lancement en local (sans Docker)
 
@@ -110,6 +101,10 @@ docker compose up --build -d
 **Sans n8n (backend appelle FastAPI directement)**  
 Dans le `.env`, commenter ou vider `N8N_WEBHOOK_URL_DOCX`, puis `docker compose restart backend`. La génération DOCX ira directement à FastAPI sans passer par n8n.
 
+## 📚 Documentation complète
+
+Pour une documentation détaillée de l’ensemble du projet (backend, CV2DOC, template, dépannage), consultez **[DOCUMENTATION.md](./DOCUMENTATION.md)**.
+
 ## 📂 Structure du Projet
 
 ```text
@@ -121,9 +116,20 @@ Dans le `.env`, commenter ou vider `N8N_WEBHOOK_URL_DOCX`, puis `docker compose 
 └── profiles.db            # Base de données locale (SQLite)
 ```
 
+## 📚 Documentation
+
+Une documentation détaillée du projet est disponible dans **[DOCUMENTATION.md](./DOCUMENTATION.md)**. Elle regroupe :
+
+- **Backend** : API, base de données, routes → `backend/README.md`
+- **CV2DOC** : extraction IA, template DOCX, n8n → `CV2DOC-n8n-flow-main/DOCUMENTATION-CV2DOC.md`
+- **Authentification** : Azure AD, Supabase → `INDEX_AUTH.md`, `AUTHENTIFICATION_MICROSOFT.md`
+
 ## 🔒 Authentification
 L'authentification est gérée par **Supabase** avec le fournisseur **Azure AD** (Microsoft). 
 Pour plus de détails sur la configuration, consultez le fichier `AUTHENTIFICATION_MICROSOFT.md`.
+
+## 📚 Documentation complète
+Voir **[DOCUMENTATION.md](./DOCUMENTATION.md)** pour l’index de toute la documentation du projet (backend, CV2DOC, authentification, etc.).
 
 ## 📄 Licence
 Propriété de FORTIL.

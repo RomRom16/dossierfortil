@@ -107,7 +107,8 @@ Variables lues depuis `.env` (voir `.env.template`) :
 
 Modèles Pydantic avec **alias** pour le JSON (noms français) :
 
-- **CVSchema** : `full_name` (alias `nom`), `phone_e164` (`téléphone`), `primary_industry` (`secteur_d_activité`), listes `expertises`, `savoir_etre`, `languages`, `experiences`.
+- **CVSchema** : `full_name` (alias `nom`), `phone_e164` (`téléphone`), `primary_industry` (`secteur_d_activité`), `contexte` (résumé du CV), listes `diplômes`, `expertises`, `savoir_etre`, `languages`, `experiences`.
+- **Diploma** : `intitule` (intitulé du diplôme), `date` (année ou mois-année), `école` (établissement). Pour les champs manquants, l’IA utilise « info à détailler ».
 - **Expertise** : titre, liste à puces de compétences, niveau (Junior / Autonome / Expert).
 - **SavoirEtre** : compétences comportementales (texte court).
 - **Language** : nom de langue, niveau (Novice / Intermédiaire / Courant / Maternelle).
@@ -118,6 +119,8 @@ Ces champs alimentent le template DOCX ; les alias définissent les clés du JSO
 ### 5.5 `analyse_cv/prompt.md`
 
 - Règles d’extraction : uniquement les informations **explicitement présentes** dans le CV ; sinon « INFO NON DISPONIBLE » ou « INFO NON DÉTAILLÉE ».
+- **Contexte** : résumé synthétique du CV (2 à 4 phrases) : profil, années d’expérience, domaines clés, objectif professionnel.
+- **Diplômes** : extraction de chaque diplôme/formation avec `intitule`, `date`, `école`. Pour tout champ manquant → « info à détailler ». Si aucune section formation → un diplôme avec tous les champs à « info à détailler ».
 - Ordre : analyser d’abord l’expérience professionnelle, puis déduire les niveaux d’expertise.
 - Séparation **savoir-faire** (techniques) / **savoir-être** (comportementaux).
 - Règles pour les langues : niveaux déduits du texte ou des indicateurs graphiques (barres de progression), avec plages de pourcentages (Novice / Intermédiaire / Courant / Maternelle).
@@ -138,8 +141,10 @@ Ces champs alimentent le template DOCX ; les alias définissent les clés du JSO
 
 ### 5.8 Template DOCX
 
-- Fichier Word (`.docx`) contenant des balises **Jinja2** (ex. `{{ nom }}`, boucles sur `expertises`, `expériences`, etc.).
-- Les noms des variables doivent correspondre aux **alias** des champs Pydantic (ou aux clés du JSON produit par l’IA).
+- Fichier Word (`.docx`) contenant des balises **Jinja2** (ex. `{{ nom }}`, `{{ contexte }}`, boucles sur `diplômes`, `expertises`, `expériences`, etc.).
+- Variables principales : `{{ nom }}`, `{{ téléphone }}`, `{{ secteur_d_activité }}`, `{{ contexte }}`.
+- Boucles : `{%p for d in diplômes%}` avec `{{ d.intitule }}`, `{{ d.date }}`, `{{ d.école }}` ; `{%p for ex in expertises %}`, `{%p for exp in expériences %}`, etc.
+- Les balises doivent rester **dans le même paragraphe** (docxtpl) ; utiliser `{%p for %}` / `{%p endfor %}` pour les boucles multi-paragraphes.
 - Voir la [doc docxtpl](https://docxtpl.readthedocs.io/) pour les boucles et la mise en forme.
 
 ---
